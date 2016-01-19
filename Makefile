@@ -10,7 +10,7 @@ LABS=" lab1a lab1bc lab2a lab2b lab3a lab3b lab4a lab4b lab5 "
                 read line; \
                 if test $$line != "yes" ; then echo "Giving up submission"; exit; fi; \
                 if test `stat -c "%s" "$@-handin.tar.gz" 2>/dev/null || stat -f "%z" "$@-handin.tar.gz"` -ge 20971520 ; then echo "File exceeds 20MB."; exit; fi; \
-	        gsubmit $(COURSE) @$@-handin.tar.gz; \
+	        gsubmit $(COURSE) $@-handin.tar.gz; \
 		gsubmit $(COURSE) -ls; \
         else \
             echo "Bad target $@. Usage: make [$(LABS)]"; \
