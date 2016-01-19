@@ -1,7 +1,7 @@
 # This is the Makefile helping you submit the labs.  
 #     $ make [lab1|lab2a|lab2b|lab3a|lab3b|lab4a|lab4b|lab5]
 COURSE=cs451
-LABS=" lab1 lab2a lab2b lab3a lab3b lab4a lab4b lab5 "
+LABS=" lab1a lab1bc lab2a lab2b lab3a lab3b lab4a lab4b lab5 "
 
 %:
 	@if echo $(LABS) | grep -q " $@ " ; then \
