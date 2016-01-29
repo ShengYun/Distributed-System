@@ -6,6 +6,7 @@ import "net/rpc"
 const (
 	Map    = "Map"
 	Reduce = "Reduce"
+	Idle   = "Idle"
 )
 
 type JobType string
@@ -40,6 +41,14 @@ type RegisterReply struct {
 	OK bool
 }
 
+type StatusReportArgs struct {
+	Worker string
+}
+
+type StatusReportReply struct {
+	OK bool
+}
+
 //
 // call() sends an RPC to the rpcname handler on server srv
 // with arguments args, waits for the reply, and leaves the
@@ -56,8 +65,7 @@ type RegisterReply struct {
 // please use call() to send all RPCs, in master.go, mapreduce.go,
 // and worker.go.  please don't change this function.
 //
-func call(srv string, rpcname string,
-	args interface{}, reply interface{}) bool {
+func call(srv string, rpcname string, args interface{}, reply interface{}) bool {
 	c, errx := rpc.Dial("unix", srv)
 	if errx != nil {
 		return false

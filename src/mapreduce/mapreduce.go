@@ -50,20 +50,19 @@ type KeyValue struct {
 }
 
 type MapReduce struct {
-	nMap            int    // Number of Map jobs
-	nReduce         int    // Number of Reduce jobs
-	file            string // Name of input file
+	nMap            int          // Number of Map jobs
+	nReduce         int          // Number of Reduce jobs
+	mapDone         map[int]bool //num of map jobs done
+	reduceDone      map[int]bool //num of reduce jobs done
+	file            string       // Name of input file
 	MasterAddress   string
 	registerChannel chan string
 	DoneChannel     chan bool
 	alive           bool
 	l               net.Listener
 	stats           *list.List
-
-	// Map of registered workers that you need to keep up to date
-	Workers map[string]*WorkerInfo
-
-	// add any additional state here
+	Workers         map[string]*WorkerInfo //info of all workers
+	statusChannel   chan *WorkerInfo       //worker status report channel
 }
 
 func InitMapReduce(nmap int, nreduce int,
@@ -76,6 +75,10 @@ func InitMapReduce(nmap int, nreduce int,
 	mr.alive = true
 	mr.registerChannel = make(chan string)
 	mr.DoneChannel = make(chan bool)
+	mr.statusChannel = make(chan *WorkerInfo, 100)
+	mr.Workers = make(map[string]*WorkerInfo)
+	mr.mapDone = make(map[int]bool)
+	mr.reduceDone = make(map[int]bool)
 
 	// initialize any additional state here
 	return mr
@@ -92,6 +95,13 @@ func MakeMapReduce(nmap int, nreduce int,
 func (mr *MapReduce) Register(args *RegisterArgs, res *RegisterReply) error {
 	DPrintf("Register: worker %s\n", args.Worker)
 	mr.registerChannel <- args.Worker
+	res.OK = true
+	return nil
+}
+
+func (mr *MapReduce) ReportStatus(args *StatusReportArgs, res *StatusReportReply) error {
+	DPrintf("Report Status: worker %s\n", args.Worker)
+	mr.statusChannel <- mr.Workers[args.Worker]
 	res.OK = true
 	return nil
 }
