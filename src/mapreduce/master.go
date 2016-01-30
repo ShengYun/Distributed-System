@@ -2,6 +2,7 @@ package mapreduce
 
 import "container/list"
 import "fmt"
+import "time"
 
 type WorkerInfo struct {
 	address string
@@ -40,13 +41,20 @@ func (mr *MapReduce) RunMaster() *list.List {
 		}
 	}()
 
+	//counter of workers reported to master
+	reportedReduceWorker := 0
+
 	for worker := range mr.statusChannel {
 		fmt.Printf("Master: Got status report from worker %s, job %d of %s has done\n", worker.address, worker.jobNum, worker.jobType)
 		mr.logJob(worker)
-		if len(mr.reduceDone) == mr.nReduce && mr.allReduceJobsDone() == -1 {
-			break
+		if (worker.jobType) == Reduce {
+			reportedReduceWorker++
 		}
-		go mr.dispatchJob(worker)
+		if len(mr.reduceDone) == mr.nReduce && reportedReduceWorker == mr.nReduce {
+			break
+		} else if len(mr.reduceDone) < mr.nReduce || len(mr.mapDone) < mr.nMap {
+			go mr.dispatchJob(worker)
+		}
 	}
 	//gather worker informations
 	return mr.KillWorkers()
@@ -85,6 +93,7 @@ func (mr *MapReduce) dispatchJob(worker *WorkerInfo) {
 		//wait for all dispatched map jobs done
 		for mr.allMapJobsDone() != -1 {
 			fmt.Println("waiting for all map jobs to finish")
+			time.Sleep(10 * time.Millisecond)
 		}
 		jobtype = Reduce
 	} else {
