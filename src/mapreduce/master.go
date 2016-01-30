@@ -36,27 +36,60 @@ func (mr *MapReduce) RunMaster() *list.List {
 			mr.Workers[workerAddressToRegister] = &WorkerInfo{workerAddressToRegister, Idle, -1}
 			fmt.Printf("Finished registration %s\n", workerAddressToRegister)
 			fmt.Println("dispatching from register function")
-			go mr.dispatchJob(Map, mr.Workers[workerAddressToRegister])
+			go mr.dispatchJob(mr.Workers[workerAddressToRegister])
 		}
 	}()
 
 	for worker := range mr.statusChannel {
 		fmt.Printf("Master: Got status report from worker %s, job %d of %s has done\n", worker.address, worker.jobNum, worker.jobType)
-		if len(mr.mapDone) == mr.nMap && len(mr.reduceDone) == mr.nReduce {
+		mr.logJob(worker)
+		if len(mr.reduceDone) == mr.nReduce && mr.allReduceJobsDone() == -1 {
 			break
 		}
-		if len(mr.mapDone) == mr.nMap {
-			mr.dispatchJob(Reduce, worker)
-		} else {
-			mr.dispatchJob(Map, worker)
-		}
+		go mr.dispatchJob(worker)
 	}
 	//gather worker informations
 	return mr.KillWorkers()
 }
 
-func (mr *MapReduce) dispatchJob(jobtype JobType, worker *WorkerInfo) {
+func (mr *MapReduce) logJob(worker *WorkerInfo) {
+	if worker.jobType == Map {
+		mr.mapDone[worker.jobNum] = true
+	} else {
+		mr.reduceDone[worker.jobNum] = true
+	}
+}
+
+func (mr *MapReduce) allMapJobsDone() int {
+	for i := 0; i < mr.nMap; i++ {
+		if finished := mr.mapDone[i]; !finished {
+			return i
+		}
+	}
+	return -1
+}
+
+func (mr *MapReduce) allReduceJobsDone() int {
+	for i := 0; i < mr.nReduce; i++ {
+		if finished := mr.reduceDone[i]; !finished {
+			return i
+		}
+	}
+	return -1
+}
+
+func (mr *MapReduce) dispatchJob(worker *WorkerInfo) {
 	var jobNum int
+	var jobtype JobType
+	if len(mr.mapDone) == mr.nMap {
+		//wait for all dispatched map jobs done
+		for mr.allMapJobsDone() != -1 {
+			fmt.Println("waiting for all map jobs to finish")
+		}
+		jobtype = Reduce
+	} else {
+		jobtype = Map
+	}
 	args := &DoJobArgs{}
 	if jobtype == Map {
 		args.NumOtherPhase = mr.nReduce
@@ -66,7 +99,8 @@ func (mr *MapReduce) dispatchJob(jobtype JobType, worker *WorkerInfo) {
 				break
 			}
 		}
-		mr.mapDone[jobNum] = true
+		//job dispathced, not done yet
+		mr.mapDone[jobNum] = false
 	} else {
 		args.NumOtherPhase = mr.nMap
 		for i := 0; i < mr.nReduce; i++ {
@@ -75,7 +109,8 @@ func (mr *MapReduce) dispatchJob(jobtype JobType, worker *WorkerInfo) {
 				break
 			}
 		}
-		mr.reduceDone[jobNum] = true
+		//job dispatched, not done yet
+		mr.reduceDone[jobNum] = false
 	}
 	fmt.Printf("Master: Dispatching %s job %d to worker %s\n", jobtype, jobNum, worker.address)
 	args.File = mr.file
@@ -86,12 +121,11 @@ func (mr *MapReduce) dispatchJob(jobtype JobType, worker *WorkerInfo) {
 	var reply DoJobReply
 	ok := call(worker.address, "Worker.DoJob", args, &reply)
 	if ok == false {
-		fmt.Printf("Master: Error dispatching %v job to worker %s, worker failed, need to redispatch the job", jobtype, worker.address)
+		fmt.Printf("Master: Error dispatching %v job to worker %s, worker failed, need to redispatch the job\n", jobtype, worker.address)
 		if jobtype == Map {
 			delete(mr.mapDone, jobNum)
 		} else {
 			delete(mr.reduceDone, jobNum)
 		}
-
 	}
 }
