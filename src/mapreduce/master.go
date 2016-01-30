@@ -36,8 +36,10 @@ func (mr *MapReduce) RunMaster() *list.List {
 			fmt.Printf("Got registration request from %s\n", workerAddressToRegister)
 			mr.Workers[workerAddressToRegister] = &WorkerInfo{workerAddressToRegister, Idle, -1}
 			fmt.Printf("Finished registration %s\n", workerAddressToRegister)
-			fmt.Println("dispatching from register function")
-			go mr.dispatchJob(mr.Workers[workerAddressToRegister])
+			if len(mr.reduceDone) < mr.nReduce || len(mr.mapDone) < mr.nMap {
+				fmt.Println("dispatching from register function")
+				go mr.dispatchJob(mr.Workers[workerAddressToRegister])
+			}
 		}
 	}()
 
@@ -49,6 +51,7 @@ func (mr *MapReduce) RunMaster() *list.List {
 		mr.logJob(worker)
 		if (worker.jobType) == Reduce {
 			reportedReduceWorker++
+			fmt.Printf("%d workers finished reduce\n", reportedReduceWorker)
 		}
 		if len(mr.reduceDone) == mr.nReduce && reportedReduceWorker == mr.nReduce {
 			break
@@ -117,30 +120,26 @@ func (mr *MapReduce) dispatchJob(worker *WorkerInfo) {
 				jobNum = i
 				break
 			}
-			//prevent redispatching of job 0
-			if i == mr.nReduce-1 {
-				jobNum = -1
-			}
 		}
 		//job dispatched, not done yet
 		mr.reduceDone[jobNum] = false
 	}
-	if jobNum != -1 {
-		fmt.Printf("Master: Dispatching %s job %d to worker %s\n", jobtype, jobNum, worker.address)
-		args.File = mr.file
-		args.JobNumber = jobNum
-		args.Operation = jobtype
-		worker.jobType = jobtype
-		worker.jobNum = jobNum
-		var reply DoJobReply
-		ok := call(worker.address, "Worker.DoJob", args, &reply)
-		if ok == false {
-			fmt.Printf("Master: Error dispatching %v job to worker %s, worker failed, need to redispatch the job\n", jobtype, worker.address)
-			if jobtype == Map {
-				delete(mr.mapDone, jobNum)
-			} else {
-				delete(mr.reduceDone, jobNum)
-			}
+	//we do have a job to dispatch
+	fmt.Printf("Master: Dispatching %s job %d to worker %s\n", jobtype, jobNum, worker.address)
+	args.File = mr.file
+	args.JobNumber = jobNum
+	args.Operation = jobtype
+	worker.jobType = jobtype
+	worker.jobNum = jobNum
+	var reply DoJobReply
+	ok := call(worker.address, "Worker.DoJob", args, &reply)
+	if ok == false {
+		fmt.Printf("Master: Error dispatching %v job to worker %s, worker failed, need to redispatch the job\n", jobtype, worker.address)
+		delete(mr.Workers, worker.address)
+		if jobtype == Map {
+			delete(mr.mapDone, jobNum)
+		} else {
+			delete(mr.reduceDone, jobNum)
 		}
 	}
 }
