@@ -36,6 +36,7 @@ func (mr *MapReduce) RunMaster() *list.List {
 			fmt.Printf("Got registration request from %s\n", workerAddressToRegister)
 			mr.Workers[workerAddressToRegister] = &WorkerInfo{workerAddressToRegister, Idle, -1}
 			fmt.Printf("Finished registration %s\n", workerAddressToRegister)
+			//if we still have jobs for worker
 			if len(mr.reduceDone) < mr.nReduce || len(mr.mapDone) < mr.nMap {
 				fmt.Println("dispatching from register function")
 				go mr.dispatchJob(mr.Workers[workerAddressToRegister])
@@ -43,23 +44,19 @@ func (mr *MapReduce) RunMaster() *list.List {
 		}
 	}()
 
-	//counter of workers reported to master
-	reportedReduceWorker := 0
-
-	for worker := range mr.statusChannel {
-		fmt.Printf("Master: Got status report from worker %s, job %d of %s has done\n", worker.address, worker.jobNum, worker.jobType)
-		mr.logJob(worker)
-		if (worker.jobType) == Reduce {
-			reportedReduceWorker++
-			fmt.Printf("%d workers finished reduce\n", reportedReduceWorker)
+	go func() {
+		for worker := range mr.statusChannel {
+			fmt.Printf("Master: Got status report from worker %s, job %d of %s has done\n", worker.address, worker.jobNum, worker.jobType)
+			mr.logJob(worker)
+			if len(mr.reduceDone) == mr.nReduce && mr.allReduceJobsDone() == -1 {
+				break
+			} else if len(mr.reduceDone) < mr.nReduce || len(mr.mapDone) < mr.nMap {
+				go mr.dispatchJob(worker)
+			}
 		}
-		if len(mr.reduceDone) == mr.nReduce && reportedReduceWorker == mr.nReduce {
-			break
-		} else if len(mr.reduceDone) < mr.nReduce || len(mr.mapDone) < mr.nMap {
-			go mr.dispatchJob(worker)
-		}
+	}()
+	for mr.allReduceJobsDone() != -1 {
 	}
-	//gather worker informations
 	return mr.KillWorkers()
 }
 
