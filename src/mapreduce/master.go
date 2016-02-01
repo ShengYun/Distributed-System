@@ -87,7 +87,7 @@ func (mr *MapReduce) allReduceJobsDone() int {
 }
 
 func (mr *MapReduce) dispatchJob(worker *WorkerInfo) {
-	var jobNum int
+	var jobNum int = -1
 	var jobtype JobType
 	if len(mr.mapDone) == mr.nMap {
 		//wait for all dispatched map jobs done
@@ -108,8 +108,10 @@ func (mr *MapReduce) dispatchJob(worker *WorkerInfo) {
 				break
 			}
 		}
-		//job dispathced, not done yet
-		mr.mapDone[jobNum] = false
+		if jobNum != -1 {
+			//job dispathced, not done yet
+			mr.mapDone[jobNum] = false
+		}
 	} else {
 		args.NumOtherPhase = mr.nMap
 		for i := 0; i < mr.nReduce; i++ {
@@ -118,25 +120,29 @@ func (mr *MapReduce) dispatchJob(worker *WorkerInfo) {
 				break
 			}
 		}
-		//job dispatched, not done yet
-		mr.reduceDone[jobNum] = false
+		if jobNum != -1 {
+			//job dispathced, not done yet
+			mr.reduceDone[jobNum] = false
+		}
 	}
-	//we do have a job to dispatch
-	fmt.Printf("Master: Dispatching %s job %d to worker %s\n", jobtype, jobNum, worker.address)
-	args.File = mr.file
-	args.JobNumber = jobNum
-	args.Operation = jobtype
-	worker.jobType = jobtype
-	worker.jobNum = jobNum
-	var reply DoJobReply
-	ok := call(worker.address, "Worker.DoJob", args, &reply)
-	if ok == false {
-		fmt.Printf("Master: Error dispatching %v job to worker %s, worker failed, need to redispatch the job\n", jobtype, worker.address)
-		delete(mr.Workers, worker.address)
-		if jobtype == Map {
-			delete(mr.mapDone, jobNum)
-		} else {
-			delete(mr.reduceDone, jobNum)
+	if jobNum != -1 {
+		//we do have a job to dispatch
+		fmt.Printf("Master: Dispatching %s job %d to worker %s\n", jobtype, jobNum, worker.address)
+		args.File = mr.file
+		args.JobNumber = jobNum
+		args.Operation = jobtype
+		worker.jobType = jobtype
+		worker.jobNum = jobNum
+		var reply DoJobReply
+		ok := call(worker.address, "Worker.DoJob", args, &reply)
+		if ok == false {
+			fmt.Printf("Master: Error dispatching %v job %d to worker %s, worker failed, need to redispatch the job\n", jobtype, jobNum, worker.address)
+			delete(mr.Workers, worker.address)
+			if jobtype == Map {
+				delete(mr.mapDone, jobNum)
+			} else {
+				delete(mr.reduceDone, jobNum)
+			}
 		}
 	}
 }
