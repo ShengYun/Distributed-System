@@ -25,7 +25,7 @@ func Map(value string) *list.List {
 	var words []string = splitString(value)
 	var intermediateList *list.List = list.New()
 	for i := 0; i < len(words); i++ {
-		intermediateList.PushBack(mapreduce.KeyValue{words[i],"1"})
+		intermediateList.PushBack(mapreduce.KeyValue{words[i], "1"})
 	}
 	return intermediateList
 }
@@ -36,7 +36,11 @@ func Map(value string) *list.List {
 func Reduce(key string, values *list.List) string {
 	var result int64 = 0
 	for v := values.Front(); v != nil; v = v.Next() {
-		result += 1
+		if s, err := strconv.ParseInt(v.Value.(string), 10, 64); err == nil {
+			result += s
+		} else {
+			fmt.Printf("Error converting string to int at %v", key)
+		}
 	}
 	return strconv.FormatInt(result, 10)
 }

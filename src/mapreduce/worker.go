@@ -11,6 +11,7 @@ import "container/list"
 
 type Worker struct {
 	name   string
+	master string
 	Reduce func(string, *list.List) string
 	Map    func(string) *list.List
 	nRPC   int
@@ -30,6 +31,7 @@ func (wk *Worker) DoJob(arg *DoJobArgs, res *DoJobReply) error {
 		DoReduce(arg.JobNumber, arg.File, arg.NumOtherPhase, wk.Reduce)
 	}
 	res.OK = true
+	wk.ReportStatus()
 	return nil
 }
 
@@ -55,6 +57,17 @@ func Register(master string, me string) {
 	}
 }
 
+func (wk *Worker) ReportStatus() {
+	fmt.Printf("Status Report: Worker %s sending status report\n", wk.name)
+	args := &StatusReportArgs{}
+	args.Worker = wk.name
+	var reply StatusReportReply
+	ok := call(wk.master, "MapReduce.ReportStatus", args, &reply)
+	if ok == false {
+		fmt.Printf("Status Report: Worker %s Master %s report error\n", wk.name, wk.master)
+	}
+}
+
 // Set up a connection with the master, register with the master,
 // and wait for jobs from the master
 func RunWorker(MasterAddress string, me string,
@@ -63,6 +76,7 @@ func RunWorker(MasterAddress string, me string,
 	DPrintf("RunWorker %s\n", me)
 	wk := new(Worker)
 	wk.name = me
+	wk.master = MasterAddress
 	wk.Map = MapFunc
 	wk.Reduce = ReduceFunc
 	wk.nRPC = nRPC
