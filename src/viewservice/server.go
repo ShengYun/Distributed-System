@@ -9,40 +9,85 @@ import "fmt"
 import "os"
 import "sync/atomic"
 
+//self made set structure to
+//avoid duplicates in idle server
+//list
+type addrSet struct {
+	set map[string]bool
+}
+
+func (set *addrSet) insert(address string) {
+	set.set[address] = true
+}
+
+func (set *addrSet) remove(address string) {
+	delete(set.set, address)
+}
+
+func (set *addrSet) getOne() string {
+	var address string
+	for addr, _ := range set.set {
+		address = addr
+		break
+	}
+	return address
+}
+
+func (set *addrSet) Len() int {
+	return len(set.set)
+}
+
 type ViewServer struct {
-	mu			  sync.Mutex
-	l			  net.Listener
-	dead		  int32 // for testing
-	rpccount	  int32 // for testing
-	me			  string
-	serverStates  map[string]Log //server status logs,{address:Log}
+	mu           sync.Mutex
+	l            net.Listener
+	dead         int32 // for testing
+	rpccount     int32 // for testing
+	me           string
+	serverStates map[string]Log //server status logs,{address:Log}
+	idleServers  addrSet
+	currentView  View
 }
 
 type Log struct {
 	address  string
 	viewnum  uint
-	tickets  int
+	lastPing time.Time
 }
 
-//
 // server Ping RPC handler.
 // The PingArgs contains the Pinging Server's
 // name caller's notion of current viewnum
 // should have a map of current servers' states
 // key: each server's host:port
 // value: Log
-// Log struct contains server's address and it's ticket num.
-// Tickets for each server is initialized to DeadPings, if a server
-// consumed all its tickets then it's considered dead, the limit of
-// tickets a server can have is equal to DeadPings, if num of ticket is less than
-// DeadPings and the viewserver receives the server's heartbeat ping
-// ticket number will increment 1
-
+// Log struct contains server's address and it's latest ping timestamp.
 func (vs *ViewServer) Ping(args *PingArgs, reply *PingReply) error {
 	address, viewNum := args.Me, args.Viewnum
-	
-	vs.serverStates[address] = Log{address, viewNum, DeadPings}
-
+	//initialize primary or backup or mark server as idle
+	if viewNum == 0 {
+		//fmt.Printf("Got new server %s ping\n", address)
+		switch "" {
+		case vs.currentView.Primary:
+			vs.currentView.Primary = address
+			vs.currentView.Ack = false
+			vs.currentView.Viewnum++
+			//fmt.Printf("Current Primary %s\n", vs.currentView.Primary)
+		case vs.currentView.Backup:
+			go vs.changeView(vs.currentView.Primary, address)
+		default:
+			//fmt.Printf("Adding server %s to idle list\n", address)
+			if address != vs.currentView.Primary && address != vs.currentView.Backup {
+				vs.idleServers.insert(address)
+			}
+		}
+	}
+	//received Ack from primary
+	if viewNum == vs.currentView.Viewnum && address == vs.currentView.Primary {
+		//fmt.Printf("Current Primary %s acked view %d\n", vs.currentView.Primary, vs.currentView.Viewnum)
+		vs.currentView.Ack = true
+	}
+	reply.View = vs.currentView
+	vs.serverStates[address] = Log{address, viewNum, time.Now()}
 	return nil
 }
 
@@ -50,12 +95,9 @@ func (vs *ViewServer) Ping(args *PingArgs, reply *PingReply) error {
 // server Get() RPC handler.
 //
 func (vs *ViewServer) Get(args *GetArgs, reply *GetReply) error {
-
-	// Your code here.
-
+	reply.View = vs.currentView
 	return nil
 }
-
 
 //
 // tick() is called once per PingInterval; it should notice
@@ -63,8 +105,68 @@ func (vs *ViewServer) Get(args *GetArgs, reply *GetReply) error {
 // accordingly.
 //
 func (vs *ViewServer) tick() {
+	for server, log := range vs.serverStates {
+		now := time.Now()
+		//the server is considered dead and need to be replaced
+		//because of no pings for a while or reboot
+		if now.Sub(log.lastPing)/PingInterval >= DeadPings {
+			//fmt.Printf("Client %s is dead, current Primary %s, current Backup %s\n", log.address, vs.currentView.Primary, vs.currentView.Backup)
+			switch server {
+			case vs.currentView.Primary:
+				//promote current backup to primary and
+				//find a new backup, issue a go routin to
+				//change view
+				//fmt.Printf("Primary failed, current Backup %s with viewnum %d\n", vs.currentView.Backup, vs.serverStates[vs.currentView.Backup].viewnum)
+				//only initialized backup got to be promoted
+				if vs.serverStates[vs.currentView.Backup].viewnum != 0 {
+					go vs.changeView(vs.currentView.Backup, vs.getBackup())
+				}
+			case vs.currentView.Backup:
+				//find a new backup, and issue a go routine to change view
+				go vs.changeView(vs.currentView.Primary, vs.getBackup())
+			default:
+				//if the dead client is in idle server list
+				//remove it from list
+				vs.idleServers.remove(server)
+			}
 
-	// Your code here.
+			delete(vs.serverStates, server)
+		}
+		if server == vs.currentView.Primary && log.viewnum == 0 {
+			//current primary restarted, treated as dead
+			//fmt.Printf("Detected Primary server %s restart, changing view\n", vs.currentView.Primary)
+			go vs.changeView(vs.currentView.Backup, vs.getBackup())
+		}
+	}
+}
+
+//wait for the current view to be acked by current primary then proceed
+//to change current view
+func (vs *ViewServer) changeView(primary string, backup string) {
+	//current view is not acked by primary
+	//can't proceed
+	//fmt.Printf("Wait for current view %d to be acked\n", vs.currentView.Viewnum)
+	for vs.currentView.Ack == false {
+	}
+	//fmt.Printf("Current view %d acked\n", vs.currentView.Viewnum)
+	//current view acked, proceed
+	vs.currentView.Ack = false
+	vs.currentView.Primary = primary
+	vs.currentView.Backup = backup
+	vs.currentView.Viewnum++
+	//fmt.Printf("View change complete, current view %d, Primary %s, Backup %s\n", vs.currentView.Viewnum, vs.currentView.Primary, vs.currentView.Backup)
+}
+
+func (vs *ViewServer) getBackup() string {
+	if vs.idleServers.Len() > 0 {
+		backup := vs.idleServers.getOne()
+		vs.idleServers.remove(backup)
+		//fmt.Printf("Returned backup %s, next idle server %s\n", backup, vs.idleServers.getOne())
+		return backup
+	} else {
+		//fmt.Println("No idle server to be backup")
+		return ""
+	}
 }
 
 //
@@ -92,6 +194,8 @@ func (vs *ViewServer) GetRPCCount() int32 {
 func StartServer(me string) *ViewServer {
 	vs := new(ViewServer)
 	vs.me = me
+	vs.serverStates = make(map[string]Log)
+	vs.idleServers.set = make(map[string]bool)
 	// Your vs.* initializations here.
 
 	// tell net/rpc about our RPC server and handlers.
