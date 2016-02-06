@@ -10,22 +10,38 @@ import "os"
 import "sync/atomic"
 
 type ViewServer struct {
-	mu       sync.Mutex
-	l        net.Listener
-	dead     int32 // for testing
-	rpccount int32 // for testing
-	me       string
+	mu			  sync.Mutex
+	l			  net.Listener
+	dead		  int32 // for testing
+	rpccount	  int32 // for testing
+	me			  string
+	serverStates  map[string]Log //server status logs,{address:Log}
+}
 
-
-	// Your declarations here.
+type Log struct {
+	address  string
+	viewnum  uint
+	tickets  int
 }
 
 //
 // server Ping RPC handler.
-//
-func (vs *ViewServer) Ping(args *PingArgs, reply *PingReply) error {
+// The PingArgs contains the Pinging Server's
+// name caller's notion of current viewnum
+// should have a map of current servers' states
+// key: each server's host:port
+// value: Log
+// Log struct contains server's address and it's ticket num.
+// Tickets for each server is initialized to DeadPings, if a server
+// consumed all its tickets then it's considered dead, the limit of
+// tickets a server can have is equal to DeadPings, if num of ticket is less than
+// DeadPings and the viewserver receives the server's heartbeat ping
+// ticket number will increment 1
 
-	// Your code here.
+func (vs *ViewServer) Ping(args *PingArgs, reply *PingReply) error {
+	address, viewNum := args.Me, args.Viewnum
+	
+	vs.serverStates[address] = Log{address, viewNum, DeadPings}
 
 	return nil
 }
