@@ -12,35 +12,41 @@ import "os"
 import "syscall"
 import "math/rand"
 
-
+const SUCCESS = "SUCCESS"
 
 type PBServer struct {
 	mu         sync.Mutex
 	l          net.Listener
-	dead       int32 // for testing
-	unreliable int32 // for testing
-	me         string
+	dead       int32  // for testing
+	unreliable int32  // for testing
+	me         string //server's name (host:port)
 	vs         *viewservice.Clerk
+	view       viewservice.View
+	db         map[string]string
 	// Your declarations here.
 }
 
-
 func (pb *PBServer) Get(args *GetArgs, reply *GetReply) error {
-
-	// Your code here.
-
+	reply.Value = pb.db[args.Key]
 	return nil
 }
-
 
 func (pb *PBServer) PutAppend(args *PutAppendArgs, reply *PutAppendReply) error {
-
-	// Your code here.
-
-
+	switch args.Op {
+	case "Put":
+		pb.db[args.Key] = args.Value
+		reply.Err = SUCCESS
+	case "Append":
+		if _, ok := pb.db[args.Key]; ok {
+			pb.db[args.Key] += args.Value
+		} else {
+			//key not exists in db, return no key error
+			pb.db[args.Key] = args.Value
+		}
+		reply.Err = SUCCESS
+	}
 	return nil
 }
-
 
 //
 // ping the viewserver periodically.
@@ -49,8 +55,18 @@ func (pb *PBServer) PutAppend(args *PutAppendArgs, reply *PutAppendReply) error 
 //   manage transfer of state from primary to new backup.
 //
 func (pb *PBServer) tick() {
-
-	// Your code here.
+	latestView, ok := pb.vs.Get()
+	//fmt.Printf("latestView Primary: %s, view num: %d; PB me: %s, view num: %d, Primary: %s\n",
+	//latestView.Primary, latestView.Viewnum, pb.me, pb.view.Viewnum, pb.view.Primary)
+	if ok == false {
+		fmt.Errorf("%s", "Error: Can't get lastest view from viewserver")
+	}
+	//if viewserver doesn't have a primary, ping it to establish
+	if latestView.Primary == "" {
+		fmt.Println("Pinging viewservice")
+		pb.view, _ = pb.vs.Ping(pb.view.Viewnum)
+	}
+	pb.vs.Ping(pb.view.Viewnum)
 }
 
 // tell the server to shut itself down.
@@ -78,11 +94,12 @@ func (pb *PBServer) isunreliable() bool {
 	return atomic.LoadInt32(&pb.unreliable) != 0
 }
 
-
 func StartServer(vshost string, me string) *PBServer {
 	pb := new(PBServer)
 	pb.me = me
 	pb.vs = viewservice.MakeClerk(me, vshost)
+	pb.view = viewservice.View{0, me, "", false}
+	pb.db = make(map[string]string)
 	// Your pb.* initializations here.
 
 	rpcs := rpc.NewServer()

@@ -7,9 +7,9 @@ import "fmt"
 import "crypto/rand"
 import "math/big"
 
-
 type Clerk struct {
-	vs *viewservice.Clerk
+	vs   *viewservice.Clerk
+	view viewservice.View
 	// Your declarations here
 }
 
@@ -25,10 +25,10 @@ func MakeClerk(vshost string, me string) *Clerk {
 	ck := new(Clerk)
 	ck.vs = viewservice.MakeClerk(me, vshost)
 	// Your ck.* initializations here
+	ck.view, _ = ck.vs.Get()
 
 	return ck
 }
-
 
 //
 // call() sends an RPC to the rpcname handler on server srv
@@ -72,18 +72,50 @@ func call(srv string, rpcname string,
 // says the key doesn't exist (has never been Put().
 //
 func (ck *Clerk) Get(key string) string {
-
-	// Your code here.
-
-	return "???"
+	for ck.view.Primary == "" {
+		//initialize primary
+		ck.view, _ = ck.vs.Get()
+	}
+	currentPrimary := ck.view.Primary
+	args := &GetArgs{}
+	args.Key = key
+	var reply GetReply
+	//send rpc to get key
+	ok := call(currentPrimary, "PBServer.Get", args, &reply)
+	if ok == false {
+		fmt.Printf("PBServer : %s failed, updating client view\n", ck.view.Primary)
+		ck.view, _ = ck.vs.Get()
+	}
+	return reply.Value
 }
 
 //
 // send a Put or Append RPC
 //
 func (ck *Clerk) PutAppend(key string, value string, op string) {
+	for ck.view.Primary == "" {
+		//initialize primary
+		ck.view, _ = ck.vs.Get()
+	}
+	currentPrimary := ck.view.Primary
+	//fmt.Printf("current viewnum: %v\n", ck.view.Viewnum)
+	args := &PutAppendArgs{}
+	args.Key = key
+	args.Value = value
+	var reply PutAppendReply
 
-	// Your code here.
+	switch op {
+	case "Put":
+		args.Op = "Put"
+	case "Append":
+		args.Op = "Append"
+	}
+	//send rpc call
+	ok := call(currentPrimary, "PBServer.PutAppend", args, &reply)
+	if ok == false {
+		fmt.Printf("PBServer : %s failed, updating client view\n", ck.view.Primary)
+		ck.view, _ = ck.vs.Get()
+	}
 }
 
 //

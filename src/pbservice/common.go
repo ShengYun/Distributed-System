@@ -12,6 +12,7 @@ type Err string
 type PutAppendArgs struct {
 	Key   string
 	Value string
+	Op    string
 	// You'll have to add definitions here.
 
 	// Field names must start with capital letters,
@@ -31,6 +32,5 @@ type GetReply struct {
 	Err   Err
 	Value string
 }
-
 
 // Your RPC definitions here.
