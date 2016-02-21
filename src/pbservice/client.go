@@ -82,9 +82,10 @@ func (ck *Clerk) Get(key string) string {
 	var reply GetReply
 	//send rpc to get key
 	ok := call(currentPrimary, "PBServer.Get", args, &reply)
-	if ok == false {
-		fmt.Printf("PBServer : %s failed, updating client view\n", ck.view.Primary)
+	if ok == false || reply.Err == ErrWrongServer {
+		//fmt.Printf("PBServer : %s failed, updating client view\n", ck.view.Primary)
 		ck.view, _ = ck.vs.Get()
+		ok = call(currentPrimary, "PBServer.Get", args, &reply)
 	}
 	return reply.Value
 }
@@ -113,7 +114,7 @@ func (ck *Clerk) PutAppend(key string, value string, op string) {
 	//send rpc call
 	ok := call(currentPrimary, "PBServer.PutAppend", args, &reply)
 	if ok == false {
-		fmt.Printf("PBServer : %s failed, updating client view\n", ck.view.Primary)
+		//fmt.Printf("PBServer : %s failed, updating client view\n", ck.view.Primary)
 		ck.view, _ = ck.vs.Get()
 	}
 }

@@ -34,3 +34,12 @@ type GetReply struct {
 }
 
 // Your RPC definitions here.
+
+//Copy DB across server
+type SyncArgs struct {
+	Db map[string]string
+}
+
+type SyncReply struct {
+	Err Err
+}

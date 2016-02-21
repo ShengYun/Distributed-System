@@ -129,6 +129,7 @@ func TestBasicFail(t *testing.T) {
 	s1.kill()
 	for i := 0; i < viewservice.DeadPings*2; i++ {
 		v, _ := vck.Get()
+		fmt.Printf("Current P %s B %s\n", v.Primary, v.Backup)
 		if v.Primary == s2.me {
 			break
 		}

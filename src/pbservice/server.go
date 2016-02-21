@@ -12,8 +12,6 @@ import "os"
 import "syscall"
 import "math/rand"
 
-const SUCCESS = "SUCCESS"
-
 type PBServer struct {
 	mu         sync.Mutex
 	l          net.Listener
@@ -23,28 +21,45 @@ type PBServer struct {
 	vs         *viewservice.Clerk
 	view       viewservice.View
 	db         map[string]string
+	synced     bool //flag to indicate if have already synced with backup
 	// Your declarations here.
 }
 
 func (pb *PBServer) Get(args *GetArgs, reply *GetReply) error {
-	reply.Value = pb.db[args.Key]
+	if pb.view.Primary == pb.me {
+		reply.Value = pb.db[args.Key]
+		reply.Err = OK
+	} else {
+		reply.Value = ""
+		reply.Err = ErrWrongServer
+	}
 	return nil
 }
 
 func (pb *PBServer) PutAppend(args *PutAppendArgs, reply *PutAppendReply) error {
+	ok := true
+	if pb.view.Backup != "" {
+		ok = call(pb.view.Backup, "PBServer.PutAppend", args, &reply)
+	}
 	switch args.Op {
 	case "Put":
 		pb.db[args.Key] = args.Value
-		reply.Err = SUCCESS
+		if ok == false {
+			fmt.Printf("Error:Put() RPC call to Backup %s failed\n", pb.view.Backup)
+		}
+		reply.Err = OK
 	case "Append":
-		if _, ok := pb.db[args.Key]; ok {
+		if _, exist := pb.db[args.Key]; exist {
 			pb.db[args.Key] += args.Value
 		} else {
-			//key not exists in db, return no key error
+			//key not exists in db
 			pb.db[args.Key] = args.Value
 		}
-		reply.Err = SUCCESS
+		if ok == false {
+			fmt.Printf("Error:Append() RPC call to Backup %s failed\n", pb.view.Backup)
+		}
 	}
+	reply.Err = OK
 	return nil
 }
 
@@ -55,18 +70,41 @@ func (pb *PBServer) PutAppend(args *PutAppendArgs, reply *PutAppendReply) error 
 //   manage transfer of state from primary to new backup.
 //
 func (pb *PBServer) tick() {
-	latestView, ok := pb.vs.Get()
-	//fmt.Printf("latestView Primary: %s, view num: %d; PB me: %s, view num: %d, Primary: %s\n",
-	//latestView.Primary, latestView.Viewnum, pb.me, pb.view.Viewnum, pb.view.Primary)
+	if pb.view.Primary == "" {
+		pb.view, _ = pb.vs.Ping(0)
+		pb.vs.Ping(pb.view.Viewnum)
+	} else {
+		fmt.Printf("Server %s pinging\n", pb.me)
+		latestView, _ := pb.vs.Ping(pb.view.Viewnum)
+		if latestView.Viewnum != pb.view.Viewnum {
+			//fmt.Printf("Updating %s from view %d to view %d\n", pb.me, pb.view.Viewnum, latestView.Viewnum)
+			pb.view = latestView
+		}
+		pb.vs.Ping(pb.view.Viewnum)
+		if pb.me == pb.view.Primary && pb.synced == false && pb.view.Backup != "" {
+			fmt.Println("Primer sending sync")
+			pb.sendSync()
+		}
+	}
+}
+
+func (pb *PBServer) sendSync() {
+	args := &SyncArgs{}
+	args.Db = pb.db
+	var reply SyncReply
+	ok := call(pb.view.Backup, "PBServer.Sync", args, &reply)
 	if ok == false {
-		fmt.Errorf("%s", "Error: Can't get lastest view from viewserver")
+		fmt.Printf("Error: Can't Sync with Backup\n")
 	}
-	//if viewserver doesn't have a primary, ping it to establish
-	if latestView.Primary == "" {
-		fmt.Println("Pinging viewservice")
-		pb.view, _ = pb.vs.Ping(pb.view.Viewnum)
+	pb.synced = true
+}
+
+func (pb *PBServer) Sync(args *SyncArgs, reply *SyncReply) error {
+	if pb.view.Backup == pb.me {
+		pb.db = args.Db
+		reply.Err = OK
 	}
-	pb.vs.Ping(pb.view.Viewnum)
+	return nil
 }
 
 // tell the server to shut itself down.
@@ -100,6 +138,7 @@ func StartServer(vshost string, me string) *PBServer {
 	pb.vs = viewservice.MakeClerk(me, vshost)
 	pb.view = viewservice.View{0, me, "", false}
 	pb.db = make(map[string]string)
+	pb.synced = false
 	// Your pb.* initializations here.
 
 	rpcs := rpc.NewServer()

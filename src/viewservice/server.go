@@ -65,19 +65,25 @@ func (vs *ViewServer) Ping(args *PingArgs, reply *PingReply) error {
 	address, viewNum := args.Me, args.Viewnum
 	//initialize primary or backup or mark server as idle
 	if viewNum == 0 {
-		//fmt.Printf("Got new server %s ping\n", address)
-		switch "" {
-		case vs.currentView.Primary:
-			vs.currentView.Primary = address
-			vs.currentView.Ack = false
-			vs.currentView.Viewnum++
-			//fmt.Printf("Current Primary %s\n", vs.currentView.Primary)
-		case vs.currentView.Backup:
-			go vs.changeView(vs.currentView.Primary, address)
-		default:
-			//fmt.Printf("Adding server %s to idle list\n", address)
-			if address != vs.currentView.Primary && address != vs.currentView.Backup {
-				vs.idleServers.insert(address)
+		if address == vs.currentView.Primary {
+			//current primary restarted, treated as dead
+			fmt.Printf("Detected Primary server %s restart, changing view\n", vs.currentView.Primary)
+			vs.changeView(vs.currentView.Backup, vs.getBackup())
+		} else {
+			//fmt.Printf("Got new server %s ping\n", address)
+			switch "" {
+			case vs.currentView.Primary:
+				vs.currentView.Primary = address
+				vs.currentView.Ack = false
+				vs.currentView.Viewnum++
+				//fmt.Printf("Current Primary %s\n", vs.currentView.Primary)
+			case vs.currentView.Backup:
+				vs.changeView(vs.currentView.Primary, address)
+			default:
+				//fmt.Printf("Adding server %s to idle list\n", address)
+				if address != vs.currentView.Primary && address != vs.currentView.Backup {
+					vs.idleServers.insert(address)
+				}
 			}
 		}
 	}
@@ -109,21 +115,21 @@ func (vs *ViewServer) tick() {
 		now := time.Now()
 		//the server is considered dead and need to be replaced
 		//because of no pings for a while or reboot
-		if now.Sub(log.lastPing)/PingInterval >= DeadPings {
-			//fmt.Printf("Client %s is dead, current Primary %s, current Backup %s\n", log.address, vs.currentView.Primary, vs.currentView.Backup)
+		if now.Sub(log.lastPing)/PingInterval > DeadPings {
+			fmt.Printf("Client %s with view %d is dead, current Primary %s, current Backup %s\n", log.address, vs.currentView.Viewnum, vs.currentView.Primary, vs.currentView.Backup)
 			switch server {
 			case vs.currentView.Primary:
 				//promote current backup to primary and
 				//find a new backup, issue a go routin to
 				//change view
-				//fmt.Printf("Primary failed, current Backup %s with viewnum %d\n", vs.currentView.Backup, vs.serverStates[vs.currentView.Backup].viewnum)
+				fmt.Printf("Primary %s failed, current Backup %s with viewnum %d\n", server, vs.currentView.Backup, vs.serverStates[vs.currentView.Backup].viewnum)
 				//only initialized backup got to be promoted
 				if vs.serverStates[vs.currentView.Backup].viewnum != 0 {
-					go vs.changeView(vs.currentView.Backup, vs.getBackup())
+					vs.changeView(vs.currentView.Backup, vs.getBackup())
 				}
 			case vs.currentView.Backup:
 				//find a new backup, and issue a go routine to change view
-				go vs.changeView(vs.currentView.Primary, vs.getBackup())
+				vs.changeView(vs.currentView.Primary, vs.getBackup())
 			default:
 				//if the dead client is in idle server list
 				//remove it from list
@@ -131,11 +137,6 @@ func (vs *ViewServer) tick() {
 			}
 
 			delete(vs.serverStates, server)
-		}
-		if server == vs.currentView.Primary && log.viewnum == 0 {
-			//current primary restarted, treated as dead
-			//fmt.Printf("Detected Primary server %s restart, changing view\n", vs.currentView.Primary)
-			go vs.changeView(vs.currentView.Backup, vs.getBackup())
 		}
 	}
 }
@@ -154,7 +155,7 @@ func (vs *ViewServer) changeView(primary string, backup string) {
 	vs.currentView.Primary = primary
 	vs.currentView.Backup = backup
 	vs.currentView.Viewnum++
-	//fmt.Printf("View change complete, current view %d, Primary %s, Backup %s\n", vs.currentView.Viewnum, vs.currentView.Primary, vs.currentView.Backup)
+	fmt.Printf("View change complete, current view %d, Primary %s, Backup %s\n", vs.currentView.Viewnum, vs.currentView.Primary, vs.currentView.Backup)
 }
 
 func (vs *ViewServer) getBackup() string {
