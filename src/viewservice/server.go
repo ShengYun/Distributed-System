@@ -40,8 +40,8 @@ func (set *addrSet) Len() int {
 type ViewServer struct {
 	mu           sync.Mutex
 	l            net.Listener
-	dead         int32 // for testing
-	rpccount     int32 // for testing
+	dead         int32          // for testing
+	rpccount     int32          // for testing
 	me           string
 	serverStates map[string]Log //server status logs,{address:Log}
 	idleServers  addrSet
@@ -76,7 +76,7 @@ func (vs *ViewServer) Ping(args *PingArgs, reply *PingReply) error {
 				vs.currentView.Primary = address
 				vs.currentView.Ack = false
 				vs.currentView.Viewnum++
-				//fmt.Printf("Current Primary %s\n", vs.currentView.Primary)
+			//fmt.Printf("Current Primary %s\n", vs.currentView.Primary)
 			case vs.currentView.Backup:
 				vs.changeView(vs.currentView.Primary, address)
 			default:
@@ -115,14 +115,14 @@ func (vs *ViewServer) tick() {
 		now := time.Now()
 		//the server is considered dead and need to be replaced
 		//because of no pings for a while or reboot
-		if now.Sub(log.lastPing)/PingInterval > DeadPings {
-			fmt.Printf("Client %s with view %d is dead, current Primary %s, current Backup %s\n", log.address, vs.currentView.Viewnum, vs.currentView.Primary, vs.currentView.Backup)
+		if now.Sub(log.lastPing) / PingInterval > DeadPings {
+			//fmt.Printf("Client %s with view %d is dead, current Primary %s, current Backup %s\n", log.address, vs.currentView.Viewnum, vs.currentView.Primary, vs.currentView.Backup)
 			switch server {
 			case vs.currentView.Primary:
 				//promote current backup to primary and
 				//find a new backup, issue a go routin to
 				//change view
-				fmt.Printf("Primary %s failed, current Backup %s with viewnum %d\n", server, vs.currentView.Backup, vs.serverStates[vs.currentView.Backup].viewnum)
+				//fmt.Printf("Primary %s failed, current Backup %s with viewnum %d\n", server, vs.currentView.Backup, vs.serverStates[vs.currentView.Backup].viewnum)
 				//only initialized backup got to be promoted
 				if vs.serverStates[vs.currentView.Backup].viewnum != 0 {
 					vs.changeView(vs.currentView.Backup, vs.getBackup())
@@ -147,15 +147,20 @@ func (vs *ViewServer) changeView(primary string, backup string) {
 	//current view is not acked by primary
 	//can't proceed
 	//fmt.Printf("Wait for current view %d to be acked\n", vs.currentView.Viewnum)
-	for vs.currentView.Ack == false {
+	for i := 0; i < DeadPings * 2; i++ {
+		if vs.currentView.Ack == true {
+			fmt.Printf("Current view %d acked\n", vs.currentView.Viewnum)
+			//current view acked, proceed
+			vs.currentView.Ack = false
+			vs.currentView.Primary = primary
+			vs.currentView.Backup = backup
+			vs.currentView.Viewnum++
+			fmt.Printf("View change complete, current view %d, Primary %s, Backup %s\n", vs.currentView.Viewnum, vs.currentView.Primary, vs.currentView.Backup)
+			break
+		}
+		time.Sleep(PingInterval)
 	}
-	//fmt.Printf("Current view %d acked\n", vs.currentView.Viewnum)
-	//current view acked, proceed
-	vs.currentView.Ack = false
-	vs.currentView.Primary = primary
-	vs.currentView.Backup = backup
-	vs.currentView.Viewnum++
-	fmt.Printf("View change complete, current view %d, Primary %s, Backup %s\n", vs.currentView.Viewnum, vs.currentView.Primary, vs.currentView.Backup)
+
 }
 
 func (vs *ViewServer) getBackup() string {

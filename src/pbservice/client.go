@@ -48,7 +48,7 @@ func MakeClerk(vshost string, me string) *Clerk {
 // please don't change this function.
 //
 func call(srv string, rpcname string,
-	args interface{}, reply interface{}) bool {
+args interface{}, reply interface{}) bool {
 	c, errx := rpc.Dial("unix", srv)
 	if errx != nil {
 		return false
@@ -79,13 +79,14 @@ func (ck *Clerk) Get(key string) string {
 	currentPrimary := ck.view.Primary
 	args := &GetArgs{}
 	args.Key = key
+	args.JobID = nrand()
 	var reply GetReply
 	//send rpc to get key
 	ok := call(currentPrimary, "PBServer.Get", args, &reply)
-	if ok == false || reply.Err == ErrWrongServer {
+	for ok == false || reply.Err == ErrWrongServer {
 		//fmt.Printf("PBServer : %s failed, updating client view\n", ck.view.Primary)
 		ck.view, _ = ck.vs.Get()
-		ok = call(currentPrimary, "PBServer.Get", args, &reply)
+		ok = call(ck.view.Primary, "PBServer.Get", args, &reply)
 	}
 	return reply.Value
 }
@@ -103,6 +104,7 @@ func (ck *Clerk) PutAppend(key string, value string, op string) {
 	args := &PutAppendArgs{}
 	args.Key = key
 	args.Value = value
+	args.JobID = nrand()
 	var reply PutAppendReply
 
 	switch op {
@@ -113,9 +115,10 @@ func (ck *Clerk) PutAppend(key string, value string, op string) {
 	}
 	//send rpc call
 	ok := call(currentPrimary, "PBServer.PutAppend", args, &reply)
-	if ok == false {
+	for ok == false {
 		//fmt.Printf("PBServer : %s failed, updating client view\n", ck.view.Primary)
 		ck.view, _ = ck.vs.Get()
+		ok = call(ck.view.Primary, "PBServer.PutAppend", args, &reply)
 	}
 }
 

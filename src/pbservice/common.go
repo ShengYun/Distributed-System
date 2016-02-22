@@ -1,8 +1,8 @@
 package pbservice
 
 const (
-	OK             = "OK"
-	ErrNoKey       = "ErrNoKey"
+	OK = "OK"
+	ErrNoKey = "ErrNoKey"
 	ErrWrongServer = "ErrWrongServer"
 )
 
@@ -13,6 +13,7 @@ type PutAppendArgs struct {
 	Key   string
 	Value string
 	Op    string
+	JobID int64
 	// You'll have to add definitions here.
 
 	// Field names must start with capital letters,
@@ -24,7 +25,8 @@ type PutAppendReply struct {
 }
 
 type GetArgs struct {
-	Key string
+	Key   string
+	JobID int64
 	// You'll have to add definitions here.
 }
 
