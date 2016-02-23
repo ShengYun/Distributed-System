@@ -149,13 +149,13 @@ func (vs *ViewServer) changeView(primary string, backup string) {
 	//fmt.Printf("Wait for current view %d to be acked\n", vs.currentView.Viewnum)
 	for i := 0; i < DeadPings * 2; i++ {
 		if vs.currentView.Ack == true {
-			fmt.Printf("Current view %d acked\n", vs.currentView.Viewnum)
+			//fmt.Printf("Current view %d acked\n", vs.currentView.Viewnum)
 			//current view acked, proceed
 			vs.currentView.Ack = false
 			vs.currentView.Primary = primary
 			vs.currentView.Backup = backup
 			vs.currentView.Viewnum++
-			fmt.Printf("View change complete, current view %d, Primary %s, Backup %s\n", vs.currentView.Viewnum, vs.currentView.Primary, vs.currentView.Backup)
+			//fmt.Printf("View change complete, current view %d, Primary %s, Backup %s\n", vs.currentView.Viewnum, vs.currentView.Primary, vs.currentView.Backup)
 			break
 		}
 		time.Sleep(PingInterval)

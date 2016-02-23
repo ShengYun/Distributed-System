@@ -23,17 +23,17 @@ type PBServer struct {
 	db         map[string]string
 	PAJobDone  map[int64]bool
 	GetJobDone map[int64]bool
-	synced     string   //synced backup
+	synced     string //synced backup
 	hasBackup  bool
                       // Your declarations here.
 }
 
 func (pb *PBServer) Get(args *GetArgs, reply *GetReply) error {
 	//fmt.Printf("Get request for %s, current Primary %s\n", pb.me, pb.view.Primary)
-	if _ , done := pb.GetJobDone[args.JobID]; !done {
+	if _, done := pb.GetJobDone[args.JobID]; !done {
 		if pb.view.Primary == pb.me {
 			//fmt.Printf("Get request for %s, current Primary %s\n", pb.me, pb.view.Primary)
-			if _ , exist := pb.db[args.Key]; exist{
+			if _, exist := pb.db[args.Key]; exist {
 				reply.Value = pb.db[args.Key]
 				reply.Err = OK
 			} else {
@@ -48,38 +48,81 @@ func (pb *PBServer) Get(args *GetArgs, reply *GetReply) error {
 	return nil
 }
 
+//function to forward PB Ops to Backup
+func (pb *PBServer) Forward(args *PutAppendArgs) {
+	//fmt.Printf("P %s sending %s to B %s for K %s V %s\n", pb.me, args.Op, pb.view.Backup, args.Key, args.Value)
+	var reply PutAppendReply
+	ok := call(pb.view.Backup, "PBServer.Update", args, &reply)
+	for ok == false && reply.Err != OK && pb.hasBackup {
+		pb.view, _ = pb.vs.Get()
+		if pb.view.Backup == "" {
+			fmt.Println("backup failed")
+			pb.hasBackup = false
+		}
+		ok = call(pb.view.Backup, "PBServer.Update", args, &reply)
+	}
+}
+
+//backup db update
+func (pb *PBServer) Update(args *PutAppendArgs, reply *PutAppendReply) error {
+	pb.mu.Lock()
+	pb.mu.Unlock()
+	//fmt.Printf("Got update at B %s, current view B %s\n", pb.me, pb.view.Backup)
+	//if pb.view.Backup != pb.me {
+	//	pb.tick()
+	//}
+	if pb.view.Backup == pb.me {
+		if _, done := pb.PAJobDone[args.JobID]; !done {
+			pb.updateDB(args, reply)
+		}
+		//fmt.Printf("%s finished %s\n", pb.me, args.Op)
+		reply.Err = OK
+	}
+	return nil
+}
+
 func (pb *PBServer) PutAppend(args *PutAppendArgs, reply *PutAppendReply) error {
 	pb.mu.Lock()
 	defer pb.mu.Unlock()
-	ok := true
+	//if pb.me == pb.view.Backup {
+	//	fmt.Printf("B %s got %s for K %s V %s\n", pb.me, args.Op, args.Key, args.Value)
+	//} else {
+	//fmt.Printf("P %s got %s for K %s V %s\n", pb.me, args.Op, args.Key, args.Value)
+	//}
+
 	if pb.hasBackup {
-		ok = call(pb.view.Backup, "PBServer.PutAppend", args, &reply)
+		pb.Forward(args)
 	}
+
 	if _, done := pb.PAJobDone[args.JobID]; !done {
-		switch args.Op {
-		case "Put":
-			pb.db[args.Key] = args.Value
-			if ok == false {
-				fmt.Printf("Error:Put() RPC call to Backup %s failed\n", pb.view.Backup)
-			}
-			pb.PAJobDone[args.JobID] = true
-			reply.Err = OK
-		case "Append":
-			if _, exist := pb.db[args.Key]; exist {
-				pb.db[args.Key] += args.Value
-			} else {
-				//key not exists in db
-				pb.db[args.Key] = args.Value
-			}
-			if ok == false {
-				fmt.Printf("Error:Append() RPC call to Backup %s failed\n", pb.view.Backup)
-			}
-			pb.PAJobDone[args.JobID] = true
-			reply.Err = OK
-		}
+		pb.updateDB(args, reply)
 	}
 
 	return nil
+}
+
+func (pb *PBServer) updateDB(args *PutAppendArgs, reply *PutAppendReply) {
+	switch args.Op {
+	case "Put":
+		pb.db[args.Key] = args.Value
+		//if ok == false {
+		//	//fmt.Printf("Error:Put() RPC call to Backup %s failed\n", pb.view.Backup)
+		//}
+		pb.PAJobDone[args.JobID] = true
+		reply.Err = OK
+	case "Append":
+		if _, exist := pb.db[args.Key]; exist {
+			pb.db[args.Key] += args.Value
+		} else {
+			//key not exists in db
+			pb.db[args.Key] = args.Value
+		}
+		//if ok == false {
+		//	//fmt.Printf("Error:Append() RPC call to Backup %s failed\n", pb.view.Backup)
+		//}
+		pb.PAJobDone[args.JobID] = true
+		reply.Err = OK
+	}
 }
 
 //
@@ -89,8 +132,8 @@ func (pb *PBServer) PutAppend(args *PutAppendArgs, reply *PutAppendReply) error 
 //   manage transfer of state from primary to new backup.
 //
 func (pb *PBServer) tick() {
-	pb.mu.Lock()
-	defer pb.mu.Unlock()
+	//pb.mu.Lock()
+	//defer pb.mu.Unlock()
 	if pb.view.Primary == "" {
 		pb.view, _ = pb.vs.Ping(0)
 		pb.vs.Ping(pb.view.Viewnum)
@@ -109,7 +152,7 @@ func (pb *PBServer) tick() {
 }
 
 func (pb *PBServer) sendSync() {
-	fmt.Printf("P %s sending sync to B %s\n", pb.me, pb.view.Backup)
+	//fmt.Printf("P %s sending sync to B %s\n", pb.me, pb.view.Backup)
 	args := &SyncArgs{}
 	args.Db = pb.db
 	var reply SyncReply
@@ -122,12 +165,11 @@ func (pb *PBServer) sendSync() {
 }
 
 func (pb *PBServer) Sync(args *SyncArgs, reply *SyncReply) error {
-	pb.tick()
 	pb.mu.Lock()
 	defer pb.mu.Unlock()
-	fmt.Printf("Got sync at B %s, current view B %s\n",pb.me, pb.view.Backup)
+	//fmt.Printf("Got sync at B %s, current view B %s\n", pb.me, pb.view.Backup)
 	if pb.view.Backup == pb.me {
-		fmt.Printf("%s Synced\n",pb.me)
+		//fmt.Printf("%s Synced\n", pb.me)
 		pb.db = args.Db
 		reply.Err = OK
 	}
