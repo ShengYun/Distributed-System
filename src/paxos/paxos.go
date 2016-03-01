@@ -40,7 +40,7 @@ import "math/rand"
 type Fate int
 
 const (
-	Decided   Fate = iota + 1
+	Decided Fate = iota + 1
 	Pending        // not yet decided.
 	Forgotten      // decided but forgotten.
 )
@@ -50,9 +50,9 @@ const Debug = 0
 type Paxos struct {
 	mu         sync.Mutex
 	l          net.Listener
-	dead       int32 // for testing
-	unreliable int32 // for testing
-	rpcCount   int32 // for testing
+	dead       int32            // for testing
+	unreliable int32            // for testing
+	rpcCount   int32            // for testing
 	peers      []string
 	me         int              // index into peers[]
 	log        map[int]Instance // each seq is mapped to an Instance hold info about it
@@ -73,7 +73,7 @@ type ProposalId struct {
 
 func (pi *ProposalId) Greater(other *ProposalId) bool {
 	return pi.Proposal > other.Proposal ||
-		(pi.Proposal == other.Proposal && pi.Who > other.Who)
+	(pi.Proposal == other.Proposal && pi.Who > other.Who)
 }
 
 func (pi *ProposalId) Equal(other *ProposalId) bool {
@@ -150,39 +150,29 @@ func (px *Paxos) makeProposal(seq int, v interface{}) {
 	if fate == Forgotten {
 		return
 	}
-	for fate != Decided {
+	// instance for proposal
+	var pInstance Instance
+	if _, exist := px.log[seq]; !exist {
+		px.log[seq] = Instance{
+			HighestPrep: ProposalId{-1, px.me},
+			HighestAC:   NullProposal(),
+			Status:      Pending,
+			Value:       v}
+	}
+	pInstance = px.log[seq]
+	for fate != Decided && !px.isdead() {
 		ac := 0 //accept count for prepare and accept
-		var pInstance Instance
-		// instance for proposal
-		if _, exist := px.log[seq]; !exist {
-			pInstance = Instance{
-				HighestPrep: ProposalId{px.log[seq].HighestPrep.Proposal + 1, px.me},
-				HighestAC:   NullProposal(),
-				Status:      Pending,
-				Value:       v}
-		} else {
-			pInstance = px.log[seq]
-		}
+		pInstance.HighestPrep.Proposal++
 		//send prepare
-		for ac = px.makePrepare(seq, &pInstance); ac < len(px.peers)/2; {
-			if ac == -1 {
-				px.log[seq] = pInstance
-				break
-			}
-			ac = px.makePrepare(seq, &pInstance)
+		ac = px.makePrepare(seq, &pInstance)
+		if ac > len(px.peers) / 2 {
+			ac = px.makeAccept(seq, &pInstance)
 		}
-		if ac >= len(px.peers)/2 {
-			ac = 0
-			for ac = px.makeAccept(seq, &pInstance); ac < len(px.peers)/2; {
-				if ac == -1 {
-					px.log[seq] = pInstance
-					break
-				}
-				ac = px.makeAccept(seq, &pInstance)
-			}
-		}
-		if ac >= len(px.peers)/2 {
+		if ac > len(px.peers) / 2 {
 			px.makeDecide(seq, v)
+		}
+		if ac == -2 {
+			px.log[seq] = pInstance
 		}
 		fate, _ = px.Status(seq)
 	}
@@ -197,7 +187,7 @@ func (px *Paxos) makePrepare(seq int, pInstance *Instance) int {
 		args.Seq = seq
 		var reply PrepareReply
 		ok := true
-		DPrintf("%s Sending Prepare Proposal %v to %s\n", px.peers[px.me], pInstance.HighestPrep, peer)
+		DPrintf("%s Sending Prepare Proposal %v for Seq %d to %s\n", px.peers[px.me], pInstance.HighestPrep, seq, peer)
 		if peer == px.peers[px.me] {
 			px.Prepare(args, &reply)
 		} else {
@@ -212,7 +202,7 @@ func (px *Paxos) makePrepare(seq int, pInstance *Instance) int {
 			if reply.HighestAC.Greater(&highestResponse) {
 				pInstance.Value = reply.Value
 			}
-			if count > len(px.peers)/2 {
+			if count > len(px.peers) / 2 {
 				return count
 			}
 		} else if reply.Ok == REJECTED {
@@ -220,8 +210,7 @@ func (px *Paxos) makePrepare(seq int, pInstance *Instance) int {
 			if reply.Decided {
 				pInstance.Status = Decided
 				pInstance.Value = reply.Value
-			} else {
-				pInstance.HighestPrep = ProposalId{reply.HighestPrep.Proposal + 1, px.me}
+				return -2
 			}
 			return -1
 		}
@@ -254,7 +243,6 @@ func (px *Paxos) Prepare(args *PrepareArgs, reply *PrepareReply) error {
 		reply.Value = cInstance.Value
 	} else {
 		reply.Ok = REJECTED
-		reply.HighestPrep = cInstance.HighestPrep
 	}
 	return nil
 }
@@ -279,7 +267,7 @@ func (px *Paxos) makeAccept(seq int, pInstance *Instance) int {
 		px.dones[peerId] = reply.Done
 		if reply.Ok == ACCEPTED {
 			count++
-			if count > len(px.peers)/2 {
+			if count > len(px.peers) / 2 {
 				return count
 			}
 		} else if reply.Ok == REJECTED {
@@ -287,9 +275,9 @@ func (px *Paxos) makeAccept(seq int, pInstance *Instance) int {
 			if reply.Decided {
 				pInstance.Status = Decided
 				pInstance.Value = reply.Value
-			} else {
-				pInstance.HighestPrep = ProposalId{reply.HighestPrep.Proposal + 1, px.me}
+				return -2
 			}
+			return -1
 		}
 	}
 	return count
@@ -317,6 +305,7 @@ func (px *Paxos) Accept(args *AcceptArgs, reply *AcceptReply) error {
 		cInstance.Value = args.Value
 		px.log[args.Seq] = cInstance
 		reply.Ok = ACCEPTED
+		reply.HighestPrep = args.Proposal
 	} else {
 		reply.HighestPrep = cInstance.HighestPrep
 		reply.Ok = REJECTED
@@ -368,6 +357,8 @@ func (px *Paxos) Learn(args *DecideArgs, reply *DecidedReply) error {
 // see the comments for Min() for more explanation.
 //
 func (px *Paxos) Done(seq int) {
+	px.mu.Lock()
+	defer px.mu.Unlock()
 	if seq > px.dones[px.me] {
 		px.dones[px.me] = seq
 	}
@@ -379,11 +370,16 @@ func (px *Paxos) Done(seq int) {
 // this peer.
 //
 func (px *Paxos) Max() int {
+	px.mu.Lock()
+	defer px.mu.Unlock()
 	highest := -1
 	for seq, _ := range px.log {
 		if seq > highest {
 			highest = seq
 		}
+	}
+	if px.dones[px.me] > highest {
+		highest = px.dones[px.me]
 	}
 	return highest
 }
@@ -519,10 +515,10 @@ func Make(peers []string, me int, rpcs *rpc.Server) *Paxos {
 			for px.isdead() == false {
 				conn, err := px.l.Accept()
 				if err == nil && px.isdead() == false {
-					if px.isunreliable() && (rand.Int63()%1000) < 100 {
+					if px.isunreliable() && (rand.Int63() % 1000) < 100 {
 						// discard the request.
 						conn.Close()
-					} else if px.isunreliable() && (rand.Int63()%1000) < 200 {
+					} else if px.isunreliable() && (rand.Int63() % 1000) < 200 {
 						// process the request but force discard of reply.
 						c1 := conn.(*net.UnixConn)
 						f, _ := c1.File()
