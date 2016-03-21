@@ -62,6 +62,7 @@ type Paxos struct {
 type Instance struct {
 	HighestPrep ProposalId
 	HighestAC   ProposalId
+	HighestACV  interface{}
 	Value       interface{}
 	Status      Fate
 }
@@ -157,6 +158,7 @@ func (px *Paxos) makeProposal(seq int, v interface{}) {
 		px.log[seq] = Instance{
 			HighestPrep: ProposalId{0, px.me},
 			HighestAC:   NullProposal(),
+			HighestACV:  nil,
 			Status:      Pending,
 			Value:       v}
 	}
@@ -168,6 +170,7 @@ func (px *Paxos) makeProposal(seq int, v interface{}) {
 		value := v
 		decided := false
 		proposal.Proposal++
+		proposal.Who = px.me
 		//send prepare
 		ac, decided, value = px.makePrepare(seq, proposal)
 		DPrintf("[Seq %d] AC count for prepare: %d/%d for proposer %d proposal %v\n", seq, ac, len(px.peers), px.me, proposal)
@@ -175,15 +178,9 @@ func (px *Paxos) makeProposal(seq int, v interface{}) {
 			ac, decided, value = px.makeAccept(seq, proposal, value)
 		}
 		if decided {
-			px.mu.Lock()
-			pInstance.Value = value
-			pInstance.Status = Decided
 			DPrintf("[Seq %d] current seq is already decide (current proposer %d informed)\n", seq, px.me)
-			px.log[seq] = pInstance
-			px.mu.Unlock()
-			break
-		}
-		if ac > len(px.peers)/2 {
+			px.makeDecide(seq, value)
+		} else if ac > len(px.peers)/2 {
 			DPrintf("[Seq %d] Decided with Propoal %v from %d with value %v, informing peers...\n", seq, proposal, px.me, value)
 			px.makeDecide(seq, v)
 		}
@@ -216,7 +213,7 @@ func (px *Paxos) makePrepare(seq int, proposal ProposalId) (int, bool, interface
 				value = reply.Value
 			}
 		} else if reply.Decided == true {
-			return len(px.peers), true, reply.Value
+			return count, true, reply.Value
 		}
 	}
 	return count, false, value
@@ -230,6 +227,7 @@ func (px *Paxos) Prepare(args *PrepareArgs, reply *PrepareReply) error {
 		px.log[args.Seq] = Instance{
 			HighestPrep: ProposalId{0, px.me},
 			HighestAC:   NullProposal(),
+			HighestACV:  nil,
 			Value:       nil,
 			Status:      Pending}
 	}
@@ -245,7 +243,7 @@ func (px *Paxos) Prepare(args *PrepareArgs, reply *PrepareReply) error {
 		px.log[args.Seq] = cInstance
 		reply.Ok = ACCEPTED
 		reply.HighestAC = cInstance.HighestAC
-		reply.Value = cInstance.Value
+		reply.Value = cInstance.HighestACV
 	} else {
 		reply.Ok = REJECTED
 	}
@@ -273,7 +271,7 @@ func (px *Paxos) makeAccept(seq int, proposal ProposalId, value interface{}) (in
 			if reply.Ok == ACCEPTED {
 				count++
 			} else if reply.Decided == true {
-				return len(px.peers), true, reply.Value
+				return count, true, reply.Value
 			} else {
 				DPrintf("[Seq %d] Accept Proposal %v got rejected by %d with HighestPrep: %v\n", seq, proposal, peerId, reply.HighestPrep)
 			}
@@ -290,6 +288,7 @@ func (px *Paxos) Accept(args *AcceptArgs, reply *AcceptReply) error {
 		px.log[args.Seq] = Instance{
 			HighestPrep: ProposalId{0, px.me},
 			HighestAC:   NullProposal(),
+			HighestACV:  nil,
 			Value:       nil,
 			Status:      Pending}
 	}
@@ -302,7 +301,7 @@ func (px *Paxos) Accept(args *AcceptArgs, reply *AcceptReply) error {
 	} else if args.Proposal.Geq(&cInstance.HighestPrep) {
 		cInstance.HighestPrep = args.Proposal
 		cInstance.HighestAC = args.Proposal
-		cInstance.Value = args.Value
+		cInstance.HighestACV = args.Value
 		px.log[args.Seq] = cInstance
 		reply.Ok = ACCEPTED
 		reply.HighestPrep = args.Proposal
@@ -335,10 +334,11 @@ func (px *Paxos) Learn(args *DecideArgs, reply *DecidedReply) error {
 	px.mu.Lock()
 	defer px.mu.Unlock()
 	if _, exist := px.log[args.Seq]; !exist {
-		DPrintf("[Seq %d] %d learned about the decision, value: %v\n", args.Seq, px.me, args.Value)
+		DPrintf("[Seq %d] %d learned about the decision, value: %v, creating instance...\n", args.Seq, px.me, args.Value)
 		px.log[args.Seq] = Instance{
 			HighestPrep: ProposalId{0, px.me},
 			HighestAC:   NullProposal(),
+			HighestACV:  nil,
 			Value:       args.Value,
 			Status:      Decided}
 	} else if cInstance := px.log[args.Seq]; cInstance.Status != Decided {
