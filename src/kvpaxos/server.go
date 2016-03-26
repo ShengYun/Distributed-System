@@ -8,10 +8,10 @@ import "paxos"
 import "sync"
 import "sync/atomic"
 import "os"
+import "time"
 import "syscall"
 import "encoding/gob"
 import "math/rand"
-
 
 const Debug = 0
 
@@ -22,11 +22,11 @@ func DPrintf(format string, a ...interface{}) (n int, err error) {
 	return
 }
 
-
 type Op struct {
-	// Your definitions here.
-	// Field names must start with capital letters,
-	// otherwise RPC will break.
+	Key   string // value of this op instance
+	Value string // key this op instance affects
+	JID   int64
+	Op    string // operation type (get,put,append)
 }
 
 type KVPaxos struct {
@@ -36,20 +36,128 @@ type KVPaxos struct {
 	dead       int32 // for testing
 	unreliable int32 // for testing
 	px         *paxos.Paxos
-
-	// Your definitions here.
+	log        map[int64]bool
+	db         map[string]string
 }
 
+// interface for Paxos
+
+//px = paxos.Make(peers []string, me int)
+
+//px.Start(seq int, v interface{}) --> start agreement on new instance
+
+//px.Status(seq int) (fate Fate, v interface{}) --> get info about an instance
+
+//px.Done(seq int) --> ok to forget all instances <= seq
+
+//px.Max() int --> highest instance seq known, or -1
+
+//px.Min() int --> instances before this have been forgotten
 
 func (kv *KVPaxos) Get(args *GetArgs, reply *GetReply) error {
-	// Your code here.
+	kv.mu.Lock()
+	if _, exist := kv.log[args.JID]; !exist {
+		kv.log[args.JID] = true
+		kv.mu.Unlock()
+		op := Op{
+			Key:   args.Key,
+			Value: "",
+			JID:   args.JID,
+			Op:    "Get",
+		}
+		seq := kv.px.Max() + 1
+		ok := kv.makeAgreement(seq, op)
+		if ok == false {
+			// current server not in majority, can't serve client request
+			reply.Err = Timeout
+		} else {
+			value, err := kv.updateDbAndGetValue(args.Key)
+			if err == OK {
+				reply.Value = value
+				reply.Err = OK
+			} else {
+				reply.Err = ErrNoKey
+			}
+		}
+	}
 	return nil
 }
 
 func (kv *KVPaxos) PutAppend(args *PutAppendArgs, reply *PutAppendReply) error {
-	// Your code here.
-
+	kv.mu.Lock()
+	if _, exist := kv.log[args.JID]; !exist {
+		kv.log[args.JID] = true
+		kv.mu.Unlock()
+		op := Op{
+			Key:   args.Key,
+			Value: args.Value,
+			JID:   args.JID,
+			Op:    args.Op,
+		}
+		seq := kv.px.Max() + 1
+		ok := kv.makeAgreement(seq, op)
+		if ok == false {
+			reply.Err = Timeout
+		} else {
+			reply.Err = OK
+		}
+	}
 	return nil
+}
+
+func (kv *KVPaxos) makeAgreement(seq int, op Op) bool {
+	// try increasing seq number until current JID have been logged
+	kv.px.Start(seq, op)
+	for status, v := kv.checkStatus(seq); v.JID != op.JID; {
+		if status != paxos.Decided {
+			return false
+		}
+		seq++
+		kv.px.Start(seq, op)
+	}
+	return true
+}
+
+func (kv *KVPaxos) updateDbAndGetValue(key string) (string, Err) {
+	kv.mu.Lock()
+	defer kv.mu.Unlock()
+	// applying all existing seq's change to db
+	start := kv.px.Min()
+	end := kv.px.Max()
+	for seq := start; seq <= end; seq++ {
+		status, op := kv.px.Status(seq)
+		if status == paxos.Decided {
+			switch op.(Op).Op {
+			case "Put":
+				kv.db[op.(Op).Key] = op.(Op).Value
+			case "Append":
+				kv.db[op.(Op).Key] += op.(Op).Value
+			}
+		}
+	}
+	// call Done() to release memory
+	kv.px.Done(end)
+	if value, exist := kv.db[key]; !exist {
+		return "", ErrNoKey
+	} else {
+		return value, OK
+	}
+}
+
+func (kv *KVPaxos) checkStatus(seq int) (paxos.Fate, Op) {
+	to := 10 * time.Millisecond
+	for {
+		status, op := kv.px.Status(seq)
+		if status == paxos.Decided {
+			return paxos.Decided, op.(Op)
+		}
+		time.Sleep(to)
+		if to < 10*time.Second {
+			to *= 2
+		} else {
+			return paxos.Pending, op.(Op)
+		}
+	}
 }
 
 // tell the server to shut itself down.
@@ -92,6 +200,8 @@ func StartServer(servers []string, me int) *KVPaxos {
 
 	kv := new(KVPaxos)
 	kv.me = me
+	kv.log = make(map[int64]bool)
+	kv.db = make(map[string]string)
 
 	// Your initialization code here.
 
@@ -106,7 +216,6 @@ func StartServer(servers []string, me int) *KVPaxos {
 		log.Fatal("listen error: ", e)
 	}
 	kv.l = l
-
 
 	// please do not change any of the following code,
 	// or do anything to subvert it.

@@ -65,15 +65,42 @@ func call(srv string, rpcname string,
 // keeps trying forever in the face of all other errors.
 //
 func (ck *Clerk) Get(key string) string {
-	// You will have to modify this function.
-	return ""
+	args := &GetArgs{}
+	args.Key = key
+	args.JID = nrand()
+	var reply GetReply
+	succeed := false
+	index := 0
+	for !succeed {
+		call(ck.servers[index], "KVPaxos.Get", args, &reply)
+		if reply.Err == OK {
+			succeed = true
+		} else if reply.Err == Timeout || reply.Err == ErrNoKey {
+			return ""
+		}
+	}
+	return reply.Value
 }
 
 //
 // shared by Put and Append.
 //
 func (ck *Clerk) PutAppend(key string, value string, op string) {
-	// You will have to modify this function.
+	args := &PutAppendArgs{}
+	args.JID = nrand()
+	args.Key = key
+	args.Value = value
+	args.Op = op
+	var reply PutAppendReply
+	succeed := false
+	index := 0
+	for !succeed {
+		call(ck.servers[index], "KVPaxos.PutAppend", args, &reply)
+		if reply.Err == OK {
+			succeed = true
+		}
+		index = (index + 1) % len(ck.servers)
+	}
 }
 
 func (ck *Clerk) Put(key string, value string) {
