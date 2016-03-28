@@ -13,11 +13,11 @@ import "syscall"
 import "encoding/gob"
 import "math/rand"
 
-const Debug = 0
+const Debug = 1
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
-		log.Printf(format, a...)
+		fmt.Printf(format, a...)
 	}
 	return
 }
@@ -36,6 +36,7 @@ type KVPaxos struct {
 	dead       int32 // for testing
 	unreliable int32 // for testing
 	px         *paxos.Paxos
+	replied    map[int64]string
 	log        map[int64]bool
 	db         map[string]string
 }
@@ -56,9 +57,9 @@ type KVPaxos struct {
 
 func (kv *KVPaxos) Get(args *GetArgs, reply *GetReply) error {
 	kv.mu.Lock()
+	defer kv.mu.Unlock()
 	if _, exist := kv.log[args.JID]; !exist {
 		kv.log[args.JID] = true
-		kv.mu.Unlock()
 		op := Op{
 			Key:   args.Key,
 			Value: "",
@@ -73,21 +74,25 @@ func (kv *KVPaxos) Get(args *GetArgs, reply *GetReply) error {
 		} else {
 			value, err := kv.updateDbAndGetValue(args.Key)
 			if err == OK {
+				kv.replied[args.CID] = value
 				reply.Value = value
 				reply.Err = OK
 			} else {
 				reply.Err = ErrNoKey
 			}
 		}
+	} else if _, exist = kv.replied[args.CID]; exist {
+		reply.Err = OK
+		reply.Value = kv.replied[args.CID]
 	}
 	return nil
 }
 
 func (kv *KVPaxos) PutAppend(args *PutAppendArgs, reply *PutAppendReply) error {
 	kv.mu.Lock()
+	defer kv.mu.Unlock()
 	if _, exist := kv.log[args.JID]; !exist {
 		kv.log[args.JID] = true
-		kv.mu.Unlock()
 		op := Op{
 			Key:   args.Key,
 			Value: args.Value,
@@ -114,24 +119,23 @@ func (kv *KVPaxos) makeAgreement(seq int, op Op) bool {
 		}
 		seq++
 		kv.px.Start(seq, op)
+		status, v = kv.checkStatus(seq)
 	}
 	return true
 }
 
 func (kv *KVPaxos) updateDbAndGetValue(key string) (string, Err) {
-	kv.mu.Lock()
-	defer kv.mu.Unlock()
 	// applying all existing seq's change to db
 	start := kv.px.Min()
 	end := kv.px.Max()
-	for seq := start; seq <= end; seq++ {
-		status, op := kv.px.Status(seq)
+	for seq := start; seq < end; seq++ {
+		status, v := kv.checkStatus(seq)
 		if status == paxos.Decided {
-			switch op.(Op).Op {
+			switch v.Op {
 			case "Put":
-				kv.db[op.(Op).Key] = op.(Op).Value
+				kv.db[v.Key] = v.Value
 			case "Append":
-				kv.db[op.(Op).Key] += op.(Op).Value
+				kv.db[v.Key] += v.Value
 			}
 		}
 	}
@@ -148,15 +152,28 @@ func (kv *KVPaxos) checkStatus(seq int) (paxos.Fate, Op) {
 	to := 10 * time.Millisecond
 	for {
 		status, op := kv.px.Status(seq)
+		kv.printStatus(seq, status)
 		if status == paxos.Decided {
-			return paxos.Decided, op.(Op)
+			return status, op.(Op)
 		}
 		time.Sleep(to)
 		if to < 10*time.Second {
 			to *= 2
 		} else {
-			return paxos.Pending, op.(Op)
+			return status, Op{}
 		}
+	}
+}
+
+func (kv *KVPaxos) printStatus(seq int, status paxos.Fate) {
+	DPrintf("[KVPaxos %d] [Seq %d] Status is ", kv.me, seq)
+	switch status {
+	case paxos.Forgotten:
+		DPrintf("Forgotten\n")
+	case paxos.Decided:
+		DPrintf("Decided\n")
+	case paxos.Pending:
+		DPrintf("Pending\n")
 	}
 }
 
@@ -200,6 +217,7 @@ func StartServer(servers []string, me int) *KVPaxos {
 
 	kv := new(KVPaxos)
 	kv.me = me
+	kv.replied = make(map[int64]string)
 	kv.log = make(map[int64]bool)
 	kv.db = make(map[string]string)
 

@@ -8,6 +8,7 @@ import "fmt"
 
 type Clerk struct {
 	servers []string
+	me      int64
 	// You will have to modify this struct.
 }
 
@@ -21,6 +22,7 @@ func nrand() int64 {
 func MakeClerk(servers []string) *Clerk {
 	ck := new(Clerk)
 	ck.servers = servers
+	ck.me = nrand()
 	// You'll have to add code here.
 	return ck
 }
@@ -68,6 +70,7 @@ func (ck *Clerk) Get(key string) string {
 	args := &GetArgs{}
 	args.Key = key
 	args.JID = nrand()
+	args.CID = ck.me
 	var reply GetReply
 	succeed := false
 	index := 0

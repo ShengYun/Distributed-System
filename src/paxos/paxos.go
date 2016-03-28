@@ -45,7 +45,7 @@ const (
 	Forgotten      // decided but forgotten.
 )
 
-const Debug = 0
+const Debug = 1
 
 type Paxos struct {
 	mu         sync.Mutex
@@ -152,6 +152,7 @@ func (px *Paxos) makeProposal(seq int, v interface{}) {
 		return
 	}
 	// instance for proposal
+	px.mu.Lock()
 	var pInstance Instance
 	if _, exist := px.log[seq]; !exist {
 		px.log[seq] = Instance{
@@ -163,6 +164,7 @@ func (px *Paxos) makeProposal(seq int, v interface{}) {
 	}
 	pInstance = px.log[seq]
 	proposal := pInstance.HighestPrep
+	px.mu.Unlock()
 	for fate != Decided && !px.isdead() {
 		ac := 0 //accept count for prepare and accept
 		value := v
@@ -170,7 +172,7 @@ func (px *Paxos) makeProposal(seq int, v interface{}) {
 		proposal.Proposal++
 		proposal.Who = px.me
 		//send prepare
-		ac, decided, value = px.makePrepare(seq, proposal)
+		ac, decided, value = px.makePrepare(seq, proposal, value)
 		DPrintf("[Seq %d] AC count for prepare: %d/%d for proposer %d proposal %v\n", seq, ac, len(px.peers), px.me, proposal)
 		if ac > len(px.peers)/2 {
 			ac, decided, value = px.makeAccept(seq, proposal, value)
@@ -180,16 +182,16 @@ func (px *Paxos) makeProposal(seq int, v interface{}) {
 			px.makeDecide(seq, value)
 		} else if ac > len(px.peers)/2 {
 			DPrintf("[Seq %d] Decided with Propoal %v from %d with value %v, informing peers...\n", seq, proposal, px.me, value)
-			px.makeDecide(seq, v)
+			px.makeDecide(seq, value)
 		}
 		fate, _ = px.Status(seq)
 	}
 }
 
-func (px *Paxos) makePrepare(seq int, proposal ProposalId) (int, bool, interface{}) {
+func (px *Paxos) makePrepare(seq int, proposal ProposalId, v interface{}) (int, bool, interface{}) {
 	count := 0
-	highestResponse := NullProposal()
-	var value interface{}
+	highestResponse := proposal
+	value := v
 	for peerId, peer := range px.peers {
 		ok := false
 		args := &PrepareArgs{}
@@ -322,7 +324,7 @@ func (px *Paxos) makeDecide(seq int, v interface{}) {
 		} else {
 			ok = call(peer, "Paxos.Learn", args, &reply)
 		}
-		if ok == false {
+		if ok == false || reply.Ok == "" {
 			fmt.Printf("[Seq %d] Error:%d Fail to inform %d about decision\n", seq, px.me, peerId)
 		}
 	}
@@ -356,6 +358,8 @@ func (px *Paxos) Learn(args *DecideArgs, reply *DecidedReply) error {
 // see the comments for Min() for more explanation.
 //
 func (px *Paxos) Done(seq int) {
+	px.mu.Lock()
+	defer px.mu.Unlock()
 	if seq > px.dones[px.me] {
 		px.dones[px.me] = seq
 	}
@@ -367,6 +371,8 @@ func (px *Paxos) Done(seq int) {
 // this peer.
 //
 func (px *Paxos) Max() int {
+	px.mu.Lock()
+	defer px.mu.Unlock()
 	highest := -1
 	for seq, _ := range px.log {
 		if seq > highest {
@@ -408,6 +414,8 @@ func (px *Paxos) Max() int {
 // instances.
 //
 func (px *Paxos) Min() int {
+	px.mu.Lock()
+	defer px.mu.Unlock()
 	min := px.dones[px.me]
 	for _, seq := range px.dones {
 		if seq < min {
@@ -418,8 +426,6 @@ func (px *Paxos) Min() int {
 	for seq, _ := range px.log {
 		if seq <= min {
 			delete(px.log, seq)
-		} else {
-			break
 		}
 	}
 	return min + 1
