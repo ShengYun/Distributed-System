@@ -45,7 +45,7 @@ const (
 	Forgotten      // decided but forgotten.
 )
 
-const Debug = 1
+const Debug = 0
 
 type Paxos struct {
 	mu         sync.Mutex
@@ -173,15 +173,15 @@ func (px *Paxos) makeProposal(seq int, v interface{}) {
 		proposal.Who = px.me
 		//send prepare
 		ac, decided, value = px.makePrepare(seq, proposal, value)
-		DPrintf("[Seq %d] AC count for prepare: %d/%d for proposer %d proposal %v\n", seq, ac, len(px.peers), px.me, proposal)
-		if ac > len(px.peers)/2 {
+		DPrintf("[Seq %d] [**Prepare**] AC count : %d/%d for proposer %d proposal %v\n", seq, ac, len(px.peers), px.me, proposal)
+		if ac > len(px.peers)/2 && !decided {
 			ac, decided, value = px.makeAccept(seq, proposal, value)
 		}
 		if decided {
-			DPrintf("[Seq %d] current seq is already decide (current proposer %d informed)\n", seq, px.me)
+			DPrintf("[Seq %d] current seq is already decide with value %v (current proposer %d informed)\n", seq, value, px.me)
 			px.makeDecide(seq, value)
 		} else if ac > len(px.peers)/2 {
-			DPrintf("[Seq %d] Decided with Propoal %v from %d with value %v, informing peers...\n", seq, proposal, px.me, value)
+			DPrintf("[Seq %d] [**Accept**] AC count : %d/%d for proposer %d proposal %v value %v\n", seq, ac, len(px.peers), px.me, proposal, value)
 			px.makeDecide(seq, value)
 		}
 		fate, _ = px.Status(seq)
