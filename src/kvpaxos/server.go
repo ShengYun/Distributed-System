@@ -13,7 +13,7 @@ import "syscall"
 import "encoding/gob"
 import "math/rand"
 
-const Debug = 1
+const Debug = 0
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
@@ -26,6 +26,7 @@ type Op struct {
 	Key   string // value of this op instance
 	Value string // key this op instance affects
 	JID   int64
+	Me    int
 	Op    string // operation type (get,put,append)
 }
 
@@ -37,8 +38,10 @@ type KVPaxos struct {
 	unreliable int32 // for testing
 	px         *paxos.Paxos
 	replied    map[int64]string
+	applied    map[int64]bool
 	log        map[int64]bool
 	db         map[string]string
+	processed  int
 }
 
 // interface for Paxos
@@ -58,12 +61,14 @@ type KVPaxos struct {
 func (kv *KVPaxos) Get(args *GetArgs, reply *GetReply) error {
 	kv.mu.Lock()
 	defer kv.mu.Unlock()
+	DPrintf("[JID %d] [**Get**] [KVPaxos %d] [Key %s]\n", args.JID, kv.me, args.Key)
 	if _, exist := kv.log[args.JID]; !exist {
 		kv.log[args.JID] = true
 		op := Op{
 			Key:   args.Key,
 			Value: "",
 			JID:   args.JID,
+			Me:    kv.me,
 			Op:    "Get",
 		}
 		seq := kv.px.Max() + 1
@@ -75,6 +80,7 @@ func (kv *KVPaxos) Get(args *GetArgs, reply *GetReply) error {
 			value, err := kv.updateDbAndGetValue(args.Key)
 			if err == OK {
 				kv.replied[args.CID] = value
+				DPrintf("[Processed] [JID %d] [**Get**] [KVPaxos %d] [Key %s] [Value %s]\n", args.JID, kv.me, args.Key, value)
 				reply.Value = value
 				reply.Err = OK
 			} else {
@@ -84,6 +90,7 @@ func (kv *KVPaxos) Get(args *GetArgs, reply *GetReply) error {
 	} else if _, exist = kv.replied[args.CID]; exist {
 		reply.Err = OK
 		reply.Value = kv.replied[args.CID]
+		DPrintf("[Already Processed] [JID %d] [**Get**] [KVPaxos %d] [Key %s] [Value %s]\n", args.JID, kv.me, args.Key, kv.replied[args.CID])
 	}
 	return nil
 }
@@ -91,12 +98,14 @@ func (kv *KVPaxos) Get(args *GetArgs, reply *GetReply) error {
 func (kv *KVPaxos) PutAppend(args *PutAppendArgs, reply *PutAppendReply) error {
 	kv.mu.Lock()
 	defer kv.mu.Unlock()
+	DPrintf("[JID %d] [KVPaxos %d] [**%s**] [Key %s] [Value %s]\n", args.JID, kv.me, args.Op, args.Key, args.Value)
 	if _, exist := kv.log[args.JID]; !exist {
 		kv.log[args.JID] = true
 		op := Op{
 			Key:   args.Key,
 			Value: args.Value,
 			JID:   args.JID,
+			Me:    kv.me,
 			Op:    args.Op,
 		}
 		seq := kv.px.Max() + 1
@@ -106,6 +115,8 @@ func (kv *KVPaxos) PutAppend(args *PutAppendArgs, reply *PutAppendReply) error {
 		} else {
 			reply.Err = OK
 		}
+	} else {
+		reply.Err = OK
 	}
 	return nil
 }
@@ -121,24 +132,31 @@ func (kv *KVPaxos) makeAgreement(seq int, op Op) bool {
 		kv.px.Start(seq, op)
 		status, v = kv.checkStatus(seq)
 	}
+	DPrintf("[Agreement] [JID %d] [KVPaxos %d] [Seq %d] [**%s**] [Key %s] [Value %s]\n", op.JID, kv.me, seq, op.Op, op.Key, op.Value)
 	return true
 }
 
 func (kv *KVPaxos) updateDbAndGetValue(key string) (string, Err) {
 	// applying all existing seq's change to db
-	start := kv.px.Min()
+	start := kv.processed
 	end := kv.px.Max()
 	for seq := start; seq < end; seq++ {
-		status, v := kv.checkStatus(seq)
+		status, value := kv.px.Status(seq)
+		var v Op
 		if status == paxos.Decided {
-			switch v.Op {
-			case "Put":
-				kv.db[v.Key] = v.Value
-			case "Append":
-				kv.db[v.Key] += v.Value
+			v = value.(Op)
+			DPrintf("[Updating] [KVPaxos %d] [Seq %d] [**%s**] [Key %s] [Value %s]\n", kv.me, seq, v.Op, v.Key, v.Value)
+			kv.apply(v)
+		} else if status != paxos.Forgotten {
+			DPrintf("[Updating] [KVPaxos %d] [Seq %d] [Hole] [Status %v] [Value %v]\n", kv.me, seq, status, value)
+			status, v = kv.learn(seq)
+			if v.Value != "" {
+				kv.apply(v)
 			}
 		}
 	}
+
+	kv.processed = end
 	// call Done() to release memory
 	kv.px.Done(end)
 	if value, exist := kv.db[key]; !exist {
@@ -146,6 +164,29 @@ func (kv *KVPaxos) updateDbAndGetValue(key string) (string, Err) {
 	} else {
 		return value, OK
 	}
+}
+
+func (kv *KVPaxos) apply(v Op) {
+	if _, exist := kv.applied[v.JID]; !exist {
+		switch v.Op {
+		case "Put":
+			kv.db[v.Key] = v.Value
+		case "Append":
+			kv.db[v.Key] += v.Value
+		}
+		kv.applied[v.JID] = true
+	}
+}
+
+func (kv *KVPaxos) learn(seq int) (paxos.Fate, Op) {
+	kv.px.Start(seq, Op{})
+	status, v := kv.checkStatus(seq)
+	if status != paxos.Decided {
+		DPrintf("[Updating] [KVPaxos %d] [Seq %d] [Learn Failed]\n", kv.me, seq)
+		return status, Op{}
+	}
+	DPrintf("[Updating] [KVPaxos %d] [Seq %d] [Learned] [**%s**] [Key %s] [Value %s]\n", kv.me, seq, v.Op, v.Key, v.Value)
+	return status, v
 }
 
 func (kv *KVPaxos) checkStatus(seq int) (paxos.Fate, Op) {
@@ -174,6 +215,8 @@ func (kv *KVPaxos) printStatus(seq int, status paxos.Fate) {
 		DPrintf("Decided\n")
 	case paxos.Pending:
 		DPrintf("Pending\n")
+	default:
+		DPrintf("New\n")
 	}
 }
 
@@ -218,8 +261,10 @@ func StartServer(servers []string, me int) *KVPaxos {
 	kv := new(KVPaxos)
 	kv.me = me
 	kv.replied = make(map[int64]string)
+	kv.applied = make(map[int64]bool)
 	kv.log = make(map[int64]bool)
 	kv.db = make(map[string]string)
+	kv.processed = 0
 
 	// Your initialization code here.
 

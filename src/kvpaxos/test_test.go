@@ -416,10 +416,12 @@ func TestUnreliable(t *testing.T) {
 				myck.Append(key, "2")
 				vv = NextValue(vv, "2")
 				time.Sleep(100 * time.Millisecond)
-				if myck.Get(key) != vv {
+				if test := myck.Get(key); test != vv {
+					fmt.Printf("====================[Key %s] Should be [%s] Got [%s]====================\n", key, vv, test)
 					t.Fatalf("wrong value")
 				}
-				if myck.Get(key) != vv {
+				if test := myck.Get(key); test != vv {
+					fmt.Printf("====================[Key %s] Should be [%s] Got [%s]====================\n", key, vv, test)
 					t.Fatalf("wrong value")
 				}
 				ok = true

@@ -4,6 +4,8 @@ import "net/rpc"
 import "crypto/rand"
 import "math/big"
 
+//import "time"
+
 import "fmt"
 
 type Clerk struct {
@@ -81,6 +83,7 @@ func (ck *Clerk) Get(key string) string {
 		} else if reply.Err == Timeout || reply.Err == ErrNoKey {
 			return ""
 		}
+		index = (index + 1) % len(ck.servers)
 	}
 	return reply.Value
 }
@@ -94,10 +97,10 @@ func (ck *Clerk) PutAppend(key string, value string, op string) {
 	args.Key = key
 	args.Value = value
 	args.Op = op
-	var reply PutAppendReply
 	succeed := false
 	index := 0
 	for !succeed {
+		var reply PutAppendReply
 		call(ck.servers[index], "KVPaxos.PutAppend", args, &reply)
 		if reply.Err == OK {
 			succeed = true
