@@ -12,6 +12,35 @@ import "os"
 import "syscall"
 import "encoding/gob"
 import "math/rand"
+import "time"
+
+/*===============Helper Functions====================*/
+const Debug = 0
+
+func DPrintf(format string, a ...interface{}) (n int, err error) {
+	if Debug > 0 {
+		fmt.Printf(format, a...)
+	}
+	return
+}
+
+func (sm *ShardMaster) checkStatus(seq int) (paxos.Fate, Op) {
+	to := 10 * time.Millisecond
+	for {
+		status, op := sm.px.Status(seq)
+		if status == paxos.Decided {
+			return status, op.(Op)
+		}
+		time.Sleep(to)
+		if to < 10*time.Second {
+			to *= 2
+		} else {
+			return status, Op{}
+		}
+	}
+}
+
+/*===================================================*/
 
 type ShardMaster struct {
 	mu         sync.Mutex
@@ -24,11 +53,9 @@ type ShardMaster struct {
 	configs []Config // indexed by config num
 }
 
-
 type Op struct {
-	// Your data here.
+	config Config
 }
-
 
 func (sm *ShardMaster) Join(args *JoinArgs, reply *JoinReply) error {
 	// Your code here.
@@ -43,7 +70,6 @@ func (sm *ShardMaster) Leave(args *LeaveArgs, reply *LeaveReply) error {
 }
 
 func (sm *ShardMaster) Move(args *MoveArgs, reply *MoveReply) error {
-	// Your code here.
 
 	return nil
 }
