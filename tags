@@ -1,0 +1,934 @@
+!_TAG_FILE_FORMAT	2
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted/
+!_TAG_PROGRAM_AUTHOR	Joel Stemmer	/stemmertech@gmail.com/
+!_TAG_PROGRAM_NAME	gotags
+!_TAG_PROGRAM_URL	https://github.com/jstemmer/gotags
+!_TAG_PROGRAM_VERSION	1.3.0
+Accept	src/paxos/paxos.go	209;"	m	access:public	ctype:Paxos	line:209	signature:(args *AcceptArgs, reply *AcceptReply)	type:error
+AcceptArgs	src/paxos/paxos.go	117;"	t	access:public	line:117	type:struct
+AcceptReply	src/paxos/paxos.go	125;"	t	access:public	line:125	type:struct
+Agree	src/paxos/paxos.go	80;"	t	access:public	line:80	type:struct
+Append	src/diskv/client.go	163;"	m	access:public	ctype:Clerk	line:163	signature:(key string, value string)
+Append	src/kvpaxos/client.go	115;"	m	access:public	ctype:Clerk	line:115	signature:(key string, value string)
+Append	src/pbservice/client.go	101;"	m	access:public	ctype:Clerk	line:101	signature:(key string, value string)
+Append	src/shardkv/client.go	163;"	m	access:public	ctype:Clerk	line:163	signature:(key string, value string)
+Backup	src/viewservice/common.go	39;"	w	access:public	ctype:View	line:39	type:string
+CID	src/kvpaxos/common.go	30;"	w	access:public	ctype:GetArgs	line:30	type:int64
+Clean	src/paxos/paxos.go	397;"	m	access:public	ctype:Paxos	line:397	signature:()
+CleanupFiles	src/mapreduce/mapreduce.go	330;"	m	access:public	ctype:MapReduce	line:330	signature:()
+CleanupRegistration	src/mapreduce/mapreduce.go	358;"	m	access:public	ctype:MapReduce	line:358	signature:()
+Clerk	src/diskv/client.go	11;"	t	access:public	line:11	type:struct
+Clerk	src/kvpaxos/client.go	11;"	t	access:public	line:11	type:struct
+Clerk	src/lockservice/client.go	11;"	t	access:public	line:11	type:struct
+Clerk	src/pbservice/client.go	11;"	t	access:public	line:11	type:struct
+Clerk	src/shardkv/client.go	11;"	t	access:public	line:11	type:struct
+Clerk	src/shardmaster/client.go	12;"	t	access:public	line:12	type:struct
+Clerk	src/viewservice/client.go	10;"	t	access:public	line:10	type:struct
+Close	src/lockservice/server.go	82;"	m	access:public	ctype:DeafConn	line:82	signature:()	type:error
+Config	src/shardmaster/common.go	25;"	t	access:public	line:25	type:struct
+Config	src/shardmaster/common.go	59;"	w	access:public	ctype:QueryReply	line:59	type:Config
+DPrintf	src/diskv/server.go	23;"	f	access:public	line:23	signature:(format string, a )	type:int, error
+DPrintf	src/kvpaxos/server.go	18;"	f	access:public	line:18	signature:(format string, a )	type:int, error
+DPrintf	src/mapreduce/mapreduce.go	39;"	f	access:public	line:39	signature:(format string, a )	type:int, error
+DPrintf	src/shardkv/server.go	20;"	f	access:public	line:20	signature:(format string, a )	type:int, error
+DPrintf	src/shardmaster/server.go	20;"	f	access:public	line:20	signature:(format string, a )	type:int, error
+DeadPings	src/viewservice/common.go	48;"	c	access:public	line:48
+DeafConn	src/lockservice/server.go	75;"	t	access:public	line:75	type:struct
+Debug	src/diskv/server.go	21;"	c	access:public	line:21
+Debug	src/kvpaxos/server.go	16;"	c	access:public	line:16
+Debug	src/mapreduce/mapreduce.go	37;"	c	access:public	line:37
+Debug	src/shardkv/server.go	18;"	c	access:public	line:18
+Debug	src/shardmaster/server.go	18;"	c	access:public	line:18
+Debugf	src/paxos/paxos.go	40;"	f	access:public	line:40	signature:(format string, args )
+Decide	src/paxos/paxos.go	233;"	m	access:public	ctype:Paxos	line:233	signature:(args *DecideArgs, reply *DecideReply)	type:error
+DecideArgs	src/paxos/paxos.go	129;"	t	access:public	line:129	type:struct
+DecideReply	src/paxos/paxos.go	136;"	t	access:public	line:136	type:struct
+Decided	src/paxos/paxos.go	53;"	c	access:public	line:53	type:Fate
+DisKV	src/diskv/server.go	36;"	t	access:public	line:36	type:struct
+DoJob	src/mapreduce/worker.go	22;"	m	access:public	ctype:Worker	line:22	signature:(arg *DoJobArgs, res *DoJobReply)	type:error
+DoJobArgs	src/mapreduce/common.go	16;"	t	access:public	line:16	type:struct
+DoJobReply	src/mapreduce/common.go	23;"	t	access:public	line:23	type:struct
+DoMap	src/mapreduce/mapreduce.go	193;"	f	access:public	line:193	signature:(JobNumber int, fileName string, nreduce int, Map func(string) *list.List)
+DoReduce	src/mapreduce/mapreduce.go	239;"	f	access:public	line:239	signature:(job int, fileName string, nmap int, Reduce func(string, *list.List) string)
+Done	src/paxos/paxos.go	418;"	m	access:public	ctype:Paxos	line:418	signature:(seq int)
+DoneChannel	src/mapreduce/mapreduce.go	58;"	w	access:public	ctype:MapReduce	line:58	type:chan bool
+Equal	src/paxos/paxos.go	68;"	m	access:public	ctype:ProposalId	line:68	signature:(other *ProposalId)	type:bool
+Err	src/diskv/common.go	18;"	t	access:public	line:18	type:string
+Err	src/diskv/common.go	31;"	w	access:public	ctype:PutAppendReply	line:31	type:Err
+Err	src/diskv/common.go	40;"	w	access:public	ctype:GetReply	line:40	type:Err
+Err	src/kvpaxos/common.go	24;"	w	access:public	ctype:PutAppendReply	line:24	type:Err
+Err	src/kvpaxos/common.go	35;"	w	access:public	ctype:GetReply	line:35	type:Err
+Err	src/kvpaxos/common.go	9;"	t	access:public	line:9	type:string
+Err	src/pbservice/common.go	22;"	w	access:public	ctype:PutAppendReply	line:22	type:Err
+Err	src/pbservice/common.go	31;"	w	access:public	ctype:GetReply	line:31	type:Err
+Err	src/pbservice/common.go	9;"	t	access:public	line:9	type:string
+Err	src/shardkv/common.go	18;"	t	access:public	line:18	type:string
+Err	src/shardkv/common.go	31;"	w	access:public	ctype:PutAppendReply	line:31	type:Err
+Err	src/shardkv/common.go	40;"	w	access:public	ctype:GetReply	line:40	type:Err
+ErrNoKey	src/diskv/common.go	14;"	c	access:public	line:14
+ErrNoKey	src/kvpaxos/common.go	5;"	c	access:public	line:5
+ErrNoKey	src/pbservice/common.go	5;"	c	access:public	line:5
+ErrNoKey	src/shardkv/common.go	14;"	c	access:public	line:14
+ErrWrongGroup	src/diskv/common.go	15;"	c	access:public	line:15
+ErrWrongGroup	src/shardkv/common.go	15;"	c	access:public	line:15
+ErrWrongServer	src/pbservice/common.go	6;"	c	access:public	line:6
+Fate	src/paxos/paxos.go	50;"	t	access:public	line:50	type:int
+File	src/mapreduce/common.go	17;"	w	access:public	ctype:DoJobArgs	line:17	type:string
+Forgotten	src/paxos/paxos.go	55;"	c	access:public	line:55
+GID	src/shardmaster/common.go	32;"	w	access:public	ctype:JoinArgs	line:32	type:int64
+GID	src/shardmaster/common.go	40;"	w	access:public	ctype:LeaveArgs	line:40	type:int64
+GID	src/shardmaster/common.go	48;"	w	access:public	ctype:MoveArgs	line:48	type:int64
+Geq	src/paxos/paxos.go	72;"	m	access:public	ctype:ProposalId	line:72	signature:(other *ProposalId)	type:bool
+Get	src/diskv/client.go	85;"	m	access:public	ctype:Clerk	line:85	signature:(key string)	type:string
+Get	src/diskv/server.go	142;"	m	access:public	ctype:DisKV	line:142	signature:(args *GetArgs, reply *GetReply)	type:error
+Get	src/kvpaxos/client.go	71;"	m	access:public	ctype:Clerk	line:71	signature:(key string)	type:string
+Get	src/kvpaxos/server.go	61;"	m	access:public	ctype:KVPaxos	line:61	signature:(args *GetArgs, reply *GetReply)	type:error
+Get	src/pbservice/client.go	74;"	m	access:public	ctype:Clerk	line:74	signature:(key string)	type:string
+Get	src/pbservice/server.go	28;"	m	access:public	ctype:PBServer	line:28	signature:(args *GetArgs, reply *GetReply)	type:error
+Get	src/shardkv/client.go	85;"	m	access:public	ctype:Clerk	line:85	signature:(key string)	type:string
+Get	src/shardkv/server.go	48;"	m	access:public	ctype:ShardKV	line:48	signature:(args *GetArgs, reply *GetReply)	type:error
+Get	src/viewservice/client.go	72;"	m	access:public	ctype:Clerk	line:72	signature:()	type:View, bool
+Get	src/viewservice/server.go	36;"	m	access:public	ctype:ViewServer	line:36	signature:(args *GetArgs, reply *GetReply)	type:error
+GetArgs	src/diskv/common.go	34;"	t	access:public	line:34	type:struct
+GetArgs	src/kvpaxos/common.go	27;"	t	access:public	line:27	type:struct
+GetArgs	src/pbservice/common.go	25;"	t	access:public	line:25	type:struct
+GetArgs	src/shardkv/common.go	34;"	t	access:public	line:34	type:struct
+GetArgs	src/viewservice/common.go	75;"	t	access:public	line:75	type:struct
+GetEntry	src/paxos/paxos.go	175;"	m	access:public	ctype:Paxos	line:175	signature:(seq int)	type:*Agree
+GetRPCCount	src/viewservice/server.go	72;"	m	access:public	ctype:ViewServer	line:72	signature:()	type:int32
+GetReply	src/diskv/common.go	39;"	t	access:public	line:39	type:struct
+GetReply	src/kvpaxos/common.go	34;"	t	access:public	line:34	type:struct
+GetReply	src/pbservice/common.go	30;"	t	access:public	line:30	type:struct
+GetReply	src/shardkv/common.go	39;"	t	access:public	line:39	type:struct
+GetReply	src/viewservice/common.go	78;"	t	access:public	line:78	type:struct
+Greater	src/paxos/paxos.go	63;"	m	access:public	ctype:ProposalId	line:63	signature:(other *ProposalId)	type:bool
+Groups	src/shardmaster/common.go	28;"	w	access:public	ctype:Config	line:28	type:map[int64][]string
+InitMapReduce	src/mapreduce/mapreduce.go	69;"	f	access:public	ctype:MapReduce	line:69	signature:(nmap int, nreduce int, file string, master string)	type:*MapReduce
+JID	src/kvpaxos/common.go	17;"	w	access:public	ctype:PutAppendArgs	line:17	type:int64
+JID	src/kvpaxos/common.go	29;"	w	access:public	ctype:GetArgs	line:29	type:int64
+JID	src/kvpaxos/server.go	28;"	w	access:public	ctype:Op	line:28	type:int64
+JobNumber	src/mapreduce/common.go	19;"	w	access:public	ctype:DoJobArgs	line:19	type:int
+JobType	src/mapreduce/common.go	11;"	t	access:public	line:11	type:string
+Join	src/shardmaster/client.go	72;"	m	access:public	ctype:Clerk	line:72	signature:(gid int64, servers []string)
+Join	src/shardmaster/server.go	77;"	m	access:public	ctype:ShardMaster	line:77	signature:(args *JoinArgs, reply *JoinReply)	type:error
+JoinArgs	src/shardmaster/common.go	31;"	t	access:public	line:31	type:struct
+JoinReply	src/shardmaster/common.go	36;"	t	access:public	line:36	type:struct
+KVPaxos	src/kvpaxos/server.go	33;"	t	access:public	line:33	type:struct
+Key	src/diskv/common.go	21;"	w	access:public	ctype:PutAppendArgs	line:21	type:string
+Key	src/diskv/common.go	35;"	w	access:public	ctype:GetArgs	line:35	type:string
+Key	src/kvpaxos/common.go	14;"	w	access:public	ctype:PutAppendArgs	line:14	type:string
+Key	src/kvpaxos/common.go	28;"	w	access:public	ctype:GetArgs	line:28	type:string
+Key	src/kvpaxos/server.go	26;"	w	access:public	ctype:Op	line:26	type:string
+Key	src/mapreduce/mapreduce.go	48;"	w	access:public	ctype:KeyValue	line:48	type:string
+Key	src/pbservice/common.go	13;"	w	access:public	ctype:PutAppendArgs	line:13	type:string
+Key	src/pbservice/common.go	26;"	w	access:public	ctype:GetArgs	line:26	type:string
+Key	src/shardkv/common.go	21;"	w	access:public	ctype:PutAppendArgs	line:21	type:string
+Key	src/shardkv/common.go	35;"	w	access:public	ctype:GetArgs	line:35	type:string
+KeyValue	src/mapreduce/mapreduce.go	47;"	t	access:public	line:47	type:struct
+Kill	src/paxos/paxos.go	515;"	m	access:public	ctype:Paxos	line:515	signature:()
+Kill	src/shardmaster/server.go	113;"	m	access:public	ctype:ShardMaster	line:113	signature:()
+Kill	src/viewservice/server.go	59;"	m	access:public	ctype:ViewServer	line:59	signature:()
+KillWorkers	src/mapreduce/master.go	15;"	m	access:public	ctype:MapReduce	line:15	signature:()	type:*list.List
+Leave	src/shardmaster/client.go	89;"	m	access:public	ctype:Clerk	line:89	signature:(gid int64)
+Leave	src/shardmaster/server.go	83;"	m	access:public	ctype:ShardMaster	line:83	signature:(args *LeaveArgs, reply *LeaveReply)	type:error
+LeaveArgs	src/shardmaster/common.go	39;"	t	access:public	line:39	type:struct
+LeaveReply	src/shardmaster/common.go	43;"	t	access:public	line:43	type:struct
+Lock	src/lockservice/client.go	66;"	m	access:public	ctype:Clerk	line:66	signature:(lockname string)	type:bool
+Lock	src/lockservice/server.go	31;"	m	access:public	ctype:LockServer	line:31	signature:(args *LockArgs, reply *LockReply)	type:error
+LockArgs	src/lockservice/common.go	13;"	t	access:public	line:13	type:struct
+LockReply	src/lockservice/common.go	19;"	t	access:public	line:19	type:struct
+LockServer	src/lockservice/server.go	12;"	t	access:public	line:12	type:struct
+Lockname	src/lockservice/common.go	16;"	w	access:public	ctype:LockArgs	line:16	type:string
+Lockname	src/lockservice/common.go	28;"	w	access:public	ctype:UnlockArgs	line:28	type:string
+Make	src/paxos/paxos.go	547;"	f	access:public	ctype:Paxos	line:547	signature:(peers []string, me int, rpcs *rpc.Server)	type:*Paxos
+MakeClerk	src/diskv/client.go	25;"	f	access:public	ctype:Clerk	line:25	signature:(shardmasters []string)	type:*Clerk
+MakeClerk	src/kvpaxos/client.go	24;"	f	access:public	ctype:Clerk	line:24	signature:(servers []string)	type:*Clerk
+MakeClerk	src/lockservice/client.go	17;"	f	access:public	ctype:Clerk	line:17	signature:(primary string, backup string)	type:*Clerk
+MakeClerk	src/pbservice/client.go	24;"	f	access:public	ctype:Clerk	line:24	signature:(vshost string, me string)	type:*Clerk
+MakeClerk	src/shardkv/client.go	25;"	f	access:public	ctype:Clerk	line:25	signature:(shardmasters []string)	type:*Clerk
+MakeClerk	src/shardmaster/client.go	16;"	f	access:public	ctype:Clerk	line:16	signature:(servers []string)	type:*Clerk
+MakeClerk	src/viewservice/client.go	15;"	f	access:public	ctype:Clerk	line:15	signature:(me string, server string)	type:*Clerk
+MakeMapReduce	src/mapreduce/mapreduce.go	84;"	f	access:public	ctype:MapReduce	line:84	signature:(nmap int, nreduce int, file string, master string)	type:*MapReduce
+Map	src/main/wc.go	14;"	f	access:public	line:14	signature:(value string)	type:*list.List
+Map	src/mapreduce/common.go	7;"	c	access:public	line:7
+Map	src/mapreduce/worker.go	15;"	w	access:public	ctype:Worker	line:15	type:func(string) *list.List
+MapFunc	src/mapreduce/test_test.go	24;"	f	access:public	line:24	signature:(value string)	type:*list.List
+MapName	src/mapreduce/mapreduce.go	136;"	f	access:public	line:136	signature:(fileName string, MapJob int)	type:string
+MapReduce	src/mapreduce/mapreduce.go	52;"	t	access:public	line:52	type:struct
+MasterAddress	src/mapreduce/mapreduce.go	56;"	w	access:public	ctype:MapReduce	line:56	type:string
+Max	src/paxos/paxos.go	434;"	m	access:public	ctype:Paxos	line:434	signature:()	type:int
+Me	src/kvpaxos/server.go	29;"	w	access:public	ctype:Op	line:29	type:int
+Me	src/paxos/paxos.go	105;"	w	access:public	ctype:PrepareArgs	line:105	type:int
+Me	src/paxos/paxos.go	121;"	w	access:public	ctype:AcceptArgs	line:121	type:int
+Me	src/paxos/paxos.go	132;"	w	access:public	ctype:DecideArgs	line:132	type:int
+Me	src/viewservice/common.go	61;"	w	access:public	ctype:PingArgs	line:61	type:string
+Merge	src/mapreduce/mapreduce.go	284;"	m	access:public	ctype:MapReduce	line:284	signature:()
+MergeName	src/mapreduce/mapreduce.go	233;"	f	access:public	line:233	signature:(fileName string, ReduceJob int)	type:string
+Min	src/paxos/paxos.go	106;"	w	access:public	ctype:PrepareArgs	line:106	type:int
+Min	src/paxos/paxos.go	122;"	w	access:public	ctype:AcceptArgs	line:122	type:int
+Min	src/paxos/paxos.go	133;"	w	access:public	ctype:DecideArgs	line:133	type:int
+Min	src/paxos/paxos.go	475;"	m	access:public	ctype:Paxos	line:475	signature:()	type:int
+Move	src/shardmaster/client.go	105;"	m	access:public	ctype:Clerk	line:105	signature:(shard int, gid int64)
+Move	src/shardmaster/server.go	89;"	m	access:public	ctype:ShardMaster	line:89	signature:(args *MoveArgs, reply *MoveReply)	type:error
+MoveArgs	src/shardmaster/common.go	46;"	t	access:public	line:46	type:struct
+MoveReply	src/shardmaster/common.go	51;"	t	access:public	line:51	type:struct
+NShards	src/shardmaster/common.go	23;"	c	access:public	line:23
+NextValue	src/kvpaxos/test_test.go	40;"	f	access:public	line:40	signature:(prev string, val string)	type:string
+Njobs	src/mapreduce/common.go	31;"	w	access:public	ctype:ShutdownReply	line:31	type:int
+NullProposal	src/paxos/paxos.go	76;"	f	access:public	ctype:ProposalId	line:76	signature:()	type:ProposalId
+Num	src/paxos/paxos.go	111;"	w	access:public	ctype:PrepareReply	line:111	type:ProposalId
+Num	src/shardmaster/common.go	26;"	w	access:public	ctype:Config	line:26	type:int
+Num	src/shardmaster/common.go	55;"	w	access:public	ctype:QueryArgs	line:55	type:int
+NumOtherPhase	src/mapreduce/common.go	20;"	w	access:public	ctype:DoJobArgs	line:20	type:int
+OK	src/diskv/common.go	13;"	c	access:public	line:13
+OK	src/kvpaxos/common.go	4;"	c	access:public	line:4
+OK	src/lockservice/common.go	20;"	w	access:public	ctype:LockReply	line:20	type:bool
+OK	src/lockservice/common.go	32;"	w	access:public	ctype:UnlockReply	line:32	type:bool
+OK	src/mapreduce/common.go	24;"	w	access:public	ctype:DoJobReply	line:24	type:bool
+OK	src/mapreduce/common.go	32;"	w	access:public	ctype:ShutdownReply	line:32	type:bool
+OK	src/mapreduce/common.go	40;"	w	access:public	ctype:RegisterReply	line:40	type:bool
+OK	src/pbservice/common.go	4;"	c	access:public	line:4
+OK	src/shardkv/common.go	13;"	c	access:public	line:13
+Ok	src/paxos/paxos.go	110;"	w	access:public	ctype:PrepareReply	line:110	type:bool
+Ok	src/paxos/paxos.go	126;"	w	access:public	ctype:AcceptReply	line:126	type:bool
+Op	src/diskv/common.go	23;"	w	access:public	ctype:PutAppendArgs	line:23	type:string
+Op	src/diskv/server.go	31;"	t	access:public	line:31	type:struct
+Op	src/kvpaxos/common.go	16;"	w	access:public	ctype:PutAppendArgs	line:16	type:string
+Op	src/kvpaxos/server.go	25;"	t	access:public	line:25	type:struct
+Op	src/kvpaxos/server.go	30;"	w	access:public	ctype:Op	line:30	type:string
+Op	src/shardkv/common.go	23;"	w	access:public	ctype:PutAppendArgs	line:23	type:string
+Op	src/shardkv/server.go	28;"	t	access:public	line:28	type:struct
+Op	src/shardmaster/server.go	73;"	t	access:public	line:73	type:struct
+Operation	src/mapreduce/common.go	18;"	w	access:public	ctype:DoJobArgs	line:18	type:JobType
+PBServer	src/pbservice/server.go	17;"	t	access:public	line:17	type:struct
+Paxos	src/paxos/paxos.go	87;"	t	access:public	line:87	type:struct
+Pending	src/paxos/paxos.go	54;"	c	access:public	line:54
+Ping	src/viewservice/client.go	56;"	m	access:public	ctype:Clerk	line:56	signature:(viewnum uint)	type:View, error
+Ping	src/viewservice/server.go	26;"	m	access:public	ctype:ViewServer	line:26	signature:(args *PingArgs, reply *PingReply)	type:error
+PingArgs	src/viewservice/common.go	60;"	t	access:public	line:60	type:struct
+PingInterval	src/viewservice/common.go	44;"	c	access:public	line:44
+PingReply	src/viewservice/common.go	65;"	t	access:public	line:65	type:struct
+Prepare	src/paxos/paxos.go	184;"	m	access:public	ctype:Paxos	line:184	signature:(args *PrepareArgs, reply *PrepareReply)	type:error
+PrepareArgs	src/paxos/paxos.go	102;"	t	access:public	line:102	type:struct
+PrepareReply	src/paxos/paxos.go	109;"	t	access:public	line:109	type:struct
+Primary	src/viewservice/client.go	82;"	m	access:public	ctype:Clerk	line:82	signature:()	type:string
+Primary	src/viewservice/common.go	38;"	w	access:public	ctype:View	line:38	type:string
+Printf	src/paxos/paxos.go	37;"	f	access:public	line:37	signature:(format string, args )
+Proposal	src/paxos/paxos.go	104;"	w	access:public	ctype:PrepareArgs	line:104	type:ProposalId
+Proposal	src/paxos/paxos.go	119;"	w	access:public	ctype:AcceptArgs	line:119	type:ProposalId
+Proposal	src/paxos/paxos.go	59;"	w	access:public	ctype:ProposalId	line:59	type:int
+ProposalId	src/paxos/paxos.go	58;"	t	access:public	line:58	type:struct
+Put	src/diskv/client.go	160;"	m	access:public	ctype:Clerk	line:160	signature:(key string, value string)
+Put	src/kvpaxos/client.go	112;"	m	access:public	ctype:Clerk	line:112	signature:(key string, value string)
+Put	src/pbservice/client.go	93;"	m	access:public	ctype:Clerk	line:93	signature:(key string, value string)
+Put	src/shardkv/client.go	160;"	m	access:public	ctype:Clerk	line:160	signature:(key string, value string)
+PutAppend	src/diskv/client.go	122;"	m	access:public	ctype:Clerk	line:122	signature:(key string, value string, op string)
+PutAppend	src/diskv/server.go	148;"	m	access:public	ctype:DisKV	line:148	signature:(args *PutAppendArgs, reply *PutAppendReply)	type:error
+PutAppend	src/kvpaxos/client.go	94;"	m	access:public	ctype:Clerk	line:94	signature:(key string, value string, op string)
+PutAppend	src/kvpaxos/server.go	98;"	m	access:public	ctype:KVPaxos	line:98	signature:(args *PutAppendArgs, reply *PutAppendReply)	type:error
+PutAppend	src/pbservice/client.go	84;"	m	access:public	ctype:Clerk	line:84	signature:(key string, value string, op string)
+PutAppend	src/pbservice/server.go	36;"	m	access:public	ctype:PBServer	line:36	signature:(args *PutAppendArgs, reply *PutAppendReply)	type:error
+PutAppend	src/shardkv/client.go	122;"	m	access:public	ctype:Clerk	line:122	signature:(key string, value string, op string)
+PutAppend	src/shardkv/server.go	54;"	m	access:public	ctype:ShardKV	line:54	signature:(args *PutAppendArgs, reply *PutAppendReply)	type:error
+PutAppendArgs	src/diskv/common.go	20;"	t	access:public	line:20	type:struct
+PutAppendArgs	src/kvpaxos/common.go	12;"	t	access:public	line:12	type:struct
+PutAppendArgs	src/pbservice/common.go	12;"	t	access:public	line:12	type:struct
+PutAppendArgs	src/shardkv/common.go	20;"	t	access:public	line:20	type:struct
+PutAppendReply	src/diskv/common.go	30;"	t	access:public	line:30	type:struct
+PutAppendReply	src/kvpaxos/common.go	23;"	t	access:public	line:23	type:struct
+PutAppendReply	src/pbservice/common.go	21;"	t	access:public	line:21	type:struct
+PutAppendReply	src/shardkv/common.go	30;"	t	access:public	line:30	type:struct
+Query	src/shardmaster/client.go	56;"	m	access:public	ctype:Clerk	line:56	signature:(num int)	type:Config
+Query	src/shardmaster/server.go	102;"	m	access:public	ctype:ShardMaster	line:102	signature:(args *QueryArgs, reply *QueryReply)	type:error
+QueryArgs	src/shardmaster/common.go	54;"	t	access:public	line:54	type:struct
+QueryReply	src/shardmaster/common.go	58;"	t	access:public	line:58	type:struct
+Read	src/lockservice/server.go	85;"	m	access:public	ctype:DeafConn	line:85	signature:(p []byte)	type:int, error
+Reduce	src/main/wc.go	20;"	f	access:public	line:20	signature:(key string, values *list.List)	type:string
+Reduce	src/mapreduce/common.go	8;"	c	access:public	line:8
+Reduce	src/mapreduce/worker.go	14;"	w	access:public	ctype:Worker	line:14	type:func(string, *list.List) string
+ReduceFunc	src/mapreduce/test_test.go	36;"	f	access:public	line:36	signature:(key string, values *list.List)	type:string
+ReduceName	src/mapreduce/mapreduce.go	181;"	f	access:public	line:181	signature:(fileName string, MapJob int, ReduceJob int)	type:string
+Register	src/mapreduce/mapreduce.go	92;"	m	access:public	ctype:MapReduce	line:92	signature:(args *RegisterArgs, res *RegisterReply)	type:error
+Register	src/mapreduce/worker.go	48;"	f	access:public	line:48	signature:(master string, me string)
+RegisterArgs	src/mapreduce/common.go	35;"	t	access:public	line:35	type:struct
+RegisterReply	src/mapreduce/common.go	39;"	t	access:public	line:39	type:struct
+RemoveFile	src/mapreduce/mapreduce.go	323;"	f	access:public	line:323	signature:(n string)
+Run	src/mapreduce/mapreduce.go	369;"	m	access:public	ctype:MapReduce	line:369	signature:()
+RunMaster	src/mapreduce/master.go	31;"	m	access:public	ctype:MapReduce	line:31	signature:()	type:*list.List
+RunSingle	src/mapreduce/mapreduce.go	344;"	f	access:public	line:344	signature:(nMap int, nReduce int, file string, Map func(string) *list.List, Reduce func(string, *list.List) string)
+RunWorker	src/mapreduce/worker.go	60;"	f	access:public	line:60	signature:(MasterAddress string, me string, MapFunc func(string) *list.List, ReduceFunc func(string, *list.List) string, nRPC int)
+Seq	src/paxos/paxos.go	103;"	w	access:public	ctype:PrepareArgs	line:103	type:int
+Seq	src/paxos/paxos.go	118;"	w	access:public	ctype:AcceptArgs	line:118	type:int
+Seq	src/paxos/paxos.go	130;"	w	access:public	ctype:DecideArgs	line:130	type:int
+Servers	src/shardmaster/common.go	33;"	w	access:public	ctype:JoinArgs	line:33	type:[]string
+Setunreliable	src/diskv/server.go	175;"	m	access:public	ctype:DisKV	line:175	signature:(what bool)
+Setunreliable	src/shardkv/server.go	80;"	m	access:public	ctype:ShardKV	line:80	signature:(what bool)
+Shard	src/shardmaster/common.go	47;"	w	access:public	ctype:MoveArgs	line:47	type:int
+ShardKV	src/shardkv/server.go	33;"	t	access:public	line:33	type:struct
+ShardMaster	src/shardmaster/server.go	62;"	t	access:public	line:62	type:struct
+Shards	src/shardmaster/common.go	27;"	w	access:public	ctype:Config	line:27	type:[]int64
+Shutdown	src/mapreduce/mapreduce.go	99;"	m	access:public	ctype:MapReduce	line:99	signature:(args *ShutdownArgs, res *ShutdownReply)	type:error
+Shutdown	src/mapreduce/worker.go	38;"	m	access:public	ctype:Worker	line:38	signature:(args *ShutdownArgs, res *ShutdownReply)	type:error
+ShutdownArgs	src/mapreduce/common.go	27;"	t	access:public	line:27	type:struct
+ShutdownReply	src/mapreduce/common.go	30;"	t	access:public	line:30	type:struct
+Split	src/mapreduce/mapreduce.go	141;"	m	access:public	ctype:MapReduce	line:141	signature:(fileName string)
+Start	src/paxos/paxos.go	258;"	m	access:public	ctype:Paxos	line:258	signature:(seq int, v interface{})
+StartRegistrationServer	src/mapreduce/mapreduce.go	106;"	m	access:public	ctype:MapReduce	line:106	signature:()
+StartServer	src/diskv/server.go	202;"	f	access:public	ctype:DisKV	line:202	signature:(gid int64, shardmasters []string, servers []string, me int, dir string, restart bool)	type:*DisKV
+StartServer	src/kvpaxos/server.go	256;"	f	access:public	ctype:KVPaxos	line:256	signature:(servers []string, me int)	type:*KVPaxos
+StartServer	src/lockservice/server.go	89;"	f	access:public	ctype:LockServer	line:89	signature:(primary string, backup string, am_primary bool)	type:*LockServer
+StartServer	src/pbservice/server.go	82;"	f	access:public	ctype:PBServer	line:82	signature:(vshost string, me string)	type:*PBServer
+StartServer	src/shardkv/server.go	101;"	f	access:public	ctype:ShardKV	line:101	signature:(gid int64, shardmasters []string, servers []string, me int)	type:*ShardKV
+StartServer	src/shardmaster/server.go	143;"	f	access:public	ctype:ShardMaster	line:143	signature:(servers []string, me int)	type:*ShardMaster
+StartServer	src/viewservice/server.go	76;"	f	access:public	ctype:ViewServer	line:76	signature:(me string)	type:*ViewServer
+Status	src/paxos/paxos.go	495;"	m	access:public	ctype:Paxos	line:495	signature:(seq int)	type:Fate, interface{}
+Test1	src/viewservice/test_test.go	36;"	f	access:public	line:36	signature:(t *testing.T)
+Test4Basic	src/diskv/test_test.go	239;"	f	access:public	line:239	signature:(t *testing.T)
+Test4Concurrent	src/diskv/test_test.go	466;"	f	access:public	line:466	signature:(t *testing.T)
+Test4ConcurrentUnreliable	src/diskv/test_test.go	472;"	f	access:public	line:472	signature:(t *testing.T)
+Test4Limp	src/diskv/test_test.go	354;"	f	access:public	line:354	signature:(t *testing.T)
+Test4Move	src/diskv/test_test.go	296;"	f	access:public	line:296	signature:(t *testing.T)
+Test5AppendUse	src/diskv/test_test.go	696;"	f	access:public	line:696	signature:(t *testing.T)
+Test5BasicPersistence	src/diskv/test_test.go	486;"	f	access:public	line:486	signature:(t *testing.T)
+Test5ConcurrentCrashReliable	src/diskv/test_test.go	1077;"	f	access:public	line:1077	signature:(t *testing.T)
+Test5DiskUse	src/diskv/test_test.go	599;"	f	access:public	line:599	signature:(t *testing.T)
+Test5OneLostDisk	src/diskv/test_test.go	795;"	f	access:public	line:795	signature:(t *testing.T)
+Test5OneLostOneDown	src/diskv/test_test.go	874;"	f	access:public	line:874	signature:(t *testing.T)
+Test5OneRestart	src/diskv/test_test.go	544;"	f	access:public	line:544	signature:(t *testing.T)
+Test5RejoinMix1	src/diskv/test_test.go	1139;"	f	access:public	line:1139	signature:(t *testing.T)
+Test5RejoinMix3	src/diskv/test_test.go	1219;"	f	access:public	line:1219	signature:(t *testing.T)
+Test5Simultaneous	src/diskv/test_test.go	1086;"	f	access:public	line:1086	signature:(t *testing.T)
+TestAtMostOnce	src/pbservice/test_test.go	178;"	f	access:public	line:178	signature:(t *testing.T)
+TestBackupFail	src/lockservice/test_test.go	309;"	f	access:public	line:309	signature:(t *testing.T)
+TestBasic	src/kvpaxos/test_test.go	44;"	f	access:public	line:44	signature:(t *testing.T)
+TestBasic	src/lockservice/test_test.go	39;"	f	access:public	line:39	signature:(t *testing.T)
+TestBasic	src/mapreduce/test_test.go	136;"	f	access:public	line:136	signature:(t *testing.T)
+TestBasic	src/paxos/test_test.go	114;"	f	access:public	line:114	signature:(t *testing.T)
+TestBasic	src/shardkv/test_test.go	122;"	f	access:public	line:122	signature:(t *testing.T)
+TestBasic	src/shardmaster/test_test.go	79;"	f	access:public	line:79	signature:(t *testing.T)
+TestBasicFail	src/pbservice/test_test.go	36;"	f	access:public	line:36	signature:(t *testing.T)
+TestConcurrent	src/shardkv/test_test.go	350;"	f	access:public	line:350	signature:(t *testing.T)
+TestConcurrentCounts	src/lockservice/test_test.go	406;"	f	access:public	line:406	signature:(t *testing.T)
+TestConcurrentSame	src/pbservice/test_test.go	321;"	f	access:public	line:321	signature:(t *testing.T)
+TestConcurrentSameAppend	src/pbservice/test_test.go	444;"	f	access:public	line:444	signature:(t *testing.T)
+TestConcurrentSameUnreliable	src/pbservice/test_test.go	551;"	f	access:public	line:551	signature:(t *testing.T)
+TestConcurrentUnreliable	src/shardkv/test_test.go	356;"	f	access:public	line:356	signature:(t *testing.T)
+TestDeaf	src/paxos/test_test.go	174;"	f	access:public	line:174	signature:(t *testing.T)
+TestDone	src/kvpaxos/test_test.go	117;"	f	access:public	line:117	signature:(t *testing.T)
+TestDoneMax	src/paxos/test_test.go	459;"	f	access:public	line:459	signature:(t *testing.T)
+TestFailPut	src/pbservice/test_test.go	232;"	f	access:public	line:232	signature:(t *testing.T)
+TestForget	src/paxos/test_test.go	217;"	f	access:public	line:217	signature:(t *testing.T)
+TestForgetMem	src/paxos/test_test.go	371;"	f	access:public	line:371	signature:(t *testing.T)
+TestFreshQuery	src/shardmaster/test_test.go	338;"	f	access:public	line:338	signature:(t *testing.T)
+TestHole	src/kvpaxos/test_test.go	521;"	f	access:public	line:521	signature:(t *testing.T)
+TestLimp	src/shardkv/test_test.go	237;"	f	access:public	line:237	signature:(t *testing.T)
+TestLots	src/paxos/test_test.go	852;"	f	access:public	line:852	signature:(t *testing.T)
+TestMany	src/lockservice/test_test.go	348;"	f	access:public	line:348	signature:(t *testing.T)
+TestMany	src/paxos/test_test.go	578;"	f	access:public	line:578	signature:(t *testing.T)
+TestManyFailures	src/mapreduce/test_test.go	167;"	f	access:public	line:167	signature:(t *testing.T)
+TestManyForget	src/paxos/test_test.go	299;"	f	access:public	line:299	signature:(t *testing.T)
+TestManyPartition	src/kvpaxos/test_test.go	612;"	f	access:public	line:612	signature:(t *testing.T)
+TestManyUnreliable	src/paxos/test_test.go	665;"	f	access:public	line:665	signature:(t *testing.T)
+TestMove	src/shardkv/test_test.go	179;"	f	access:public	line:179	signature:(t *testing.T)
+TestOld	src/paxos/test_test.go	628;"	f	access:public	line:628	signature:(t *testing.T)
+TestOneFailure	src/mapreduce/test_test.go	151;"	f	access:public	line:151	signature:(t *testing.T)
+TestPartition	src/kvpaxos/test_test.go	227;"	f	access:public	line:227	signature:(t *testing.T)
+TestPartition	src/paxos/test_test.go	753;"	f	access:public	line:753	signature:(t *testing.T)
+TestPartition1	src/pbservice/test_test.go	949;"	f	access:public	line:949	signature:(t *testing.T)
+TestPartition2	src/pbservice/test_test.go	1042;"	f	access:public	line:1042	signature:(t *testing.T)
+TestPrimaryFail1	src/lockservice/test_test.go	70;"	f	access:public	line:70	signature:(t *testing.T)
+TestPrimaryFail2	src/lockservice/test_test.go	109;"	f	access:public	line:109	signature:(t *testing.T)
+TestPrimaryFail3	src/lockservice/test_test.go	135;"	f	access:public	line:135	signature:(t *testing.T)
+TestPrimaryFail4	src/lockservice/test_test.go	157;"	f	access:public	line:157	signature:(t *testing.T)
+TestPrimaryFail5	src/lockservice/test_test.go	180;"	f	access:public	line:180	signature:(t *testing.T)
+TestPrimaryFail6	src/lockservice/test_test.go	205;"	f	access:public	line:205	signature:(t *testing.T)
+TestPrimaryFail7	src/lockservice/test_test.go	231;"	f	access:public	line:231	signature:(t *testing.T)
+TestPrimaryFail8	src/lockservice/test_test.go	271;"	f	access:public	line:271	signature:(t *testing.T)
+TestRPCCount	src/paxos/test_test.go	503;"	f	access:public	line:503	signature:(t *testing.T)
+TestRepeatedCrash	src/pbservice/test_test.go	666;"	f	access:public	line:666	signature:(t *testing.T)
+TestRepeatedCrashUnreliable	src/pbservice/test_test.go	778;"	f	access:public	line:778	signature:(t *testing.T)
+TestUnreliable	src/kvpaxos/test_test.go	364;"	f	access:public	line:364	signature:(t *testing.T)
+TestUnreliable	src/shardmaster/test_test.go	287;"	f	access:public	line:287	signature:(t *testing.T)
+Timeout	src/kvpaxos/common.go	6;"	c	access:public	line:6
+Unlock	src/lockservice/client.go	88;"	m	access:public	ctype:Clerk	line:88	signature:(lockname string)	type:bool
+Unlock	src/lockservice/server.go	51;"	m	access:public	ctype:LockServer	line:51	signature:(args *UnlockArgs, reply *UnlockReply)	type:error
+UnlockArgs	src/lockservice/common.go	27;"	t	access:public	line:27	type:struct
+UnlockReply	src/lockservice/common.go	31;"	t	access:public	line:31	type:struct
+Value	src/diskv/common.go	22;"	w	access:public	ctype:PutAppendArgs	line:22	type:string
+Value	src/diskv/common.go	41;"	w	access:public	ctype:GetReply	line:41	type:string
+Value	src/kvpaxos/common.go	15;"	w	access:public	ctype:PutAppendArgs	line:15	type:string
+Value	src/kvpaxos/common.go	36;"	w	access:public	ctype:GetReply	line:36	type:string
+Value	src/kvpaxos/server.go	27;"	w	access:public	ctype:Op	line:27	type:string
+Value	src/mapreduce/mapreduce.go	49;"	w	access:public	ctype:KeyValue	line:49	type:string
+Value	src/paxos/paxos.go	113;"	w	access:public	ctype:PrepareReply	line:113	type:interface{}
+Value	src/paxos/paxos.go	120;"	w	access:public	ctype:AcceptArgs	line:120	type:interface{}
+Value	src/paxos/paxos.go	131;"	w	access:public	ctype:DecideArgs	line:131	type:interface{}
+Value	src/pbservice/common.go	14;"	w	access:public	ctype:PutAppendArgs	line:14	type:string
+Value	src/pbservice/common.go	32;"	w	access:public	ctype:GetReply	line:32	type:string
+Value	src/shardkv/common.go	22;"	w	access:public	ctype:PutAppendArgs	line:22	type:string
+Value	src/shardkv/common.go	41;"	w	access:public	ctype:GetReply	line:41	type:string
+View	src/viewservice/common.go	36;"	t	access:public	line:36	type:struct
+View	src/viewservice/common.go	66;"	w	access:public	ctype:PingReply	line:66	type:View
+View	src/viewservice/common.go	79;"	w	access:public	ctype:GetReply	line:79	type:View
+ViewServer	src/viewservice/server.go	12;"	t	access:public	line:12	type:struct
+Viewnum	src/viewservice/common.go	37;"	w	access:public	ctype:View	line:37	type:uint
+Viewnum	src/viewservice/common.go	62;"	w	access:public	ctype:PingArgs	line:62	type:uint
+Who	src/paxos/paxos.go	60;"	w	access:public	ctype:ProposalId	line:60	type:int
+Worker	src/mapreduce/common.go	36;"	w	access:public	ctype:RegisterArgs	line:36	type:string
+Worker	src/mapreduce/worker.go	12;"	t	access:public	line:12	type:struct
+WorkerInfo	src/mapreduce/master.go	7;"	t	access:public	line:7	type:struct
+Workers	src/mapreduce/mapreduce.go	64;"	w	access:public	ctype:MapReduce	line:64	type:map[string]*WorkerInfo
+Write	src/lockservice/server.go	79;"	m	access:public	ctype:DeafConn	line:79	signature:(p []byte)	type:int, error
+address	src/mapreduce/master.go	8;"	w	access:private	ctype:WorkerInfo	line:8	type:string
+alive	src/mapreduce/mapreduce.go	59;"	w	access:private	ctype:MapReduce	line:59	type:bool
+am_primary	src/lockservice/server.go	18;"	w	access:private	ctype:LockServer	line:18	type:bool
+applied	src/kvpaxos/server.go	41;"	w	access:private	ctype:KVPaxos	line:41	type:map[int64]bool
+apply	src/kvpaxos/server.go	169;"	m	access:private	ctype:KVPaxos	line:169	signature:(v Op)
+backup	src/lockservice/server.go	19;"	w	access:private	ctype:LockServer	line:19	type:string
+bufio	src/mapreduce/mapreduce.go	12;"	i	line:12
+bufio	src/mapreduce/test_test.go	9;"	i	line:9
+c	src/lockservice/server.go	76;"	w	access:private	ctype:DeafConn	line:76	type:io.ReadWriteCloser
+call	src/diskv/client.go	49;"	f	access:private	line:49	signature:(srv string, rpcname string, args interface{}, reply interface{})	type:bool
+call	src/kvpaxos/client.go	49;"	f	access:private	line:49	signature:(srv string, rpcname string, args interface{}, reply interface{})	type:bool
+call	src/lockservice/client.go	42;"	f	access:private	line:42	signature:(srv string, rpcname string, args interface{}, reply interface{})	type:bool
+call	src/mapreduce/common.go	59;"	f	access:private	line:59	signature:(srv string, rpcname string, args interface{}, reply interface{})	type:bool
+call	src/paxos/paxos.go	155;"	f	access:private	line:155	signature:(srv string, name string, args interface{}, reply interface{})	type:bool
+call	src/pbservice/client.go	50;"	f	access:private	line:50	signature:(srv string, rpcname string, args interface{}, reply interface{})	type:bool
+call	src/shardkv/client.go	49;"	f	access:private	line:49	signature:(srv string, rpcname string, args interface{}, reply interface{})	type:bool
+call	src/shardmaster/client.go	39;"	f	access:private	line:39	signature:(srv string, rpcname string, args interface{}, reply interface{})	type:bool
+call	src/viewservice/client.go	39;"	f	access:private	line:39	signature:(srv string, rpcname string, args interface{}, reply interface{})	type:bool
+check	src/kvpaxos/test_test.go	13;"	f	access:private	line:13	signature:(t *testing.T, ck *Clerk, key string, value string)
+check	src/mapreduce/test_test.go	45;"	f	access:private	line:45	signature:(t *testing.T, file string)
+check	src/pbservice/test_test.go	18;"	f	access:private	line:18	signature:(ck *Clerk, key string, value string)
+check	src/shardmaster/test_test.go	35;"	f	access:private	line:35	signature:(t *testing.T, groups []int64, ck *Clerk)
+check	src/viewservice/test_test.go	10;"	f	access:private	line:10	signature:(t *testing.T, ck *Clerk, p string, b string, n uint)
+checkAppends	src/diskv/test_test.go	965;"	f	access:private	line:965	signature:(t *testing.T, v string, counts []int)
+checkAppends	src/kvpaxos/test_test.go	342;"	f	access:private	line:342	signature:(t *testing.T, v string, counts []int)
+checkAppends	src/pbservice/test_test.go	419;"	f	access:private	line:419	signature:(t *testing.T, v string, counts []int)
+checkStatus	src/kvpaxos/server.go	192;"	m	access:private	ctype:KVPaxos	line:192	signature:(seq int)	type:paxos.Fate, Op
+checkStatus	src/shardmaster/server.go	27;"	m	access:private	ctype:ShardMaster	line:27	signature:(seq int)	type:paxos.Fate, Op
+checkWorker	src/mapreduce/test_test.go	87;"	f	access:private	line:87	signature:(t *testing.T, l *list.List)
+checkmax	src/paxos/test_test.go	72;"	f	access:private	line:72	signature:(t *testing.T, pxa []*Paxos, seq int, max int)
+cleanpp	src/kvpaxos/test_test.go	199;"	f	access:private	line:199	signature:(tag string, n int)
+cleanpp	src/paxos/test_test.go	722;"	f	access:private	line:722	signature:(tag string, n int)
+cleanup	src/diskv/test_test.go	119;"	m	access:private	ctype:tCluster	line:119	signature:()
+cleanup	src/kvpaxos/test_test.go	31;"	f	access:private	line:31	signature:(kva []*KVPaxos)
+cleanup	src/mapreduce/test_test.go	131;"	f	access:private	line:131	signature:(mr *MapReduce)
+cleanup	src/paxos/test_test.go	80;"	f	access:private	line:80	signature:(pxa []*Paxos)
+cleanup	src/shardkv/test_test.go	50;"	m	access:private	ctype:tCluster	line:50	signature:()
+cleanup	src/shardmaster/test_test.go	23;"	f	access:private	line:23	signature:(sma []*ShardMaster)
+clerk	src/diskv/test_test.go	144;"	m	access:private	ctype:tCluster	line:144	signature:()	type:*Clerk
+clerk	src/shardkv/test_test.go	71;"	m	access:private	ctype:tCluster	line:71	signature:()	type:*Clerk
+config	src/diskv/client.go	14;"	w	access:private	ctype:Clerk	line:14	type:shardmaster.Config
+config	src/shardkv/client.go	14;"	w	access:private	ctype:Clerk	line:14	type:shardmaster.Config
+config	src/shardmaster/server.go	74;"	w	access:private	ctype:Op	line:74	type:Config
+configs	src/shardmaster/server.go	70;"	w	access:private	ctype:ShardMaster	line:70	type:[]Config
+container/list	src/main/wc.go	7;"	i	line:7
+container/list	src/mapreduce/mapreduce.go	9;"	i	line:9
+container/list	src/mapreduce/master.go	3;"	i	line:3
+container/list	src/mapreduce/test_test.go	6;"	i	line:6
+container/list	src/mapreduce/worker.go	8;"	i	line:8
+crypto/rand	src/diskv/client.go	8;"	i	line:8
+crypto/rand	src/diskv/test_test.go	16;"	i	line:16
+crypto/rand	src/kvpaxos/client.go	4;"	i	line:4
+crypto/rand	src/paxos/test_test.go	10;"	i	line:10
+crypto/rand	src/pbservice/client.go	7;"	i	line:7
+crypto/rand	src/shardkv/client.go	8;"	i	line:8
+db	src/kvpaxos/server.go	43;"	w	access:private	ctype:KVPaxos	line:43	type:map[string]string
+dead	src/diskv/server.go	40;"	w	access:private	ctype:DisKV	line:40	type:int32
+dead	src/kvpaxos/server.go	37;"	w	access:private	ctype:KVPaxos	line:37	type:int32
+dead	src/lockservice/server.go	15;"	w	access:private	ctype:LockServer	line:15	type:bool
+dead	src/paxos/paxos.go	90;"	w	access:private	ctype:Paxos	line:90	type:int32
+dead	src/pbservice/server.go	20;"	w	access:private	ctype:PBServer	line:20	type:int32
+dead	src/shardkv/server.go	37;"	w	access:private	ctype:ShardKV	line:37	type:int32
+dead	src/shardmaster/server.go	66;"	w	access:private	ctype:ShardMaster	line:66	type:int32
+dead	src/viewservice/server.go	15;"	w	access:private	ctype:ViewServer	line:15	type:int32
+debugging	src/paxos/paxos.go	35;"	c	access:private	line:35	type:bool
+decodeKey	src/diskv/server.go	80;"	m	access:private	ctype:DisKV	line:80	signature:(filename string)	type:string, error
+dir	src/diskv/server.go	44;"	w	access:private	ctype:DisKV	line:44	type:string
+dir	src/diskv/test_test.go	24;"	w	access:private	ctype:tServer	line:24	type:string
+dir	src/diskv/test_test.go	37;"	w	access:private	ctype:tCluster	line:37	type:string
+diskv	src/diskv/client.go	1;"	p	line:1
+diskv	src/diskv/common.go	1;"	p	line:1
+diskv	src/diskv/server.go	1;"	p	line:1
+diskv	src/diskv/test_test.go	1;"	p	line:1
+diskv	src/main/diskvd.go	19;"	i	line:19
+doConcurrent	src/diskv/test_test.go	420;"	f	access:private	line:420	signature:(t *testing.T, unreliable bool)
+doConcurrent	src/shardkv/test_test.go	304;"	f	access:private	line:304	signature:(t *testing.T, unreliable bool)
+doConcurrentCrash	src/diskv/test_test.go	987;"	f	access:private	line:987	signature:(t *testing.T, unreliable bool)
+dying	src/lockservice/server.go	16;"	w	access:private	ctype:LockServer	line:16	type:bool
+encodeKey	src/diskv/server.go	76;"	m	access:private	ctype:DisKV	line:76	signature:(key string)	type:string
+encoding/base32	src/diskv/server.go	14;"	i	line:14
+encoding/base64	src/diskv/test_test.go	17;"	i	line:17
+encoding/base64	src/paxos/test_test.go	11;"	i	line:11
+encoding/gob	src/diskv/server.go	13;"	i	line:13
+encoding/gob	src/kvpaxos/server.go	13;"	i	line:13
+encoding/gob	src/shardkv/server.go	13;"	i	line:13
+encoding/gob	src/shardmaster/server.go	13;"	i	line:13
+encoding/json	src/mapreduce/mapreduce.go	7;"	i	line:7
+fate	src/paxos/paxos.go	81;"	w	access:private	ctype:Agree	line:81	type:Fate
+file	src/mapreduce/mapreduce.go	55;"	w	access:private	ctype:MapReduce	line:55	type:string
+fileGet	src/diskv/server.go	86;"	m	access:private	ctype:DisKV	line:86	signature:(shard int, key string)	type:string, error
+filePut	src/diskv/server.go	95;"	m	access:private	ctype:DisKV	line:95	signature:(shard int, key string, content string)	type:error
+fileReadShard	src/diskv/server.go	108;"	m	access:private	ctype:DisKV	line:108	signature:(shard int)	type:map[string]string
+fileReplaceShard	src/diskv/server.go	133;"	m	access:private	ctype:DisKV	line:133	signature:(shard int, m map[string]string)
+fmt	src/diskv/client.go	7;"	i	line:7
+fmt	src/diskv/server.go	4;"	i	line:4
+fmt	src/diskv/test_test.go	11;"	i	line:11
+fmt	src/kvpaxos/client.go	9;"	i	line:9
+fmt	src/kvpaxos/server.go	4;"	i	line:4
+fmt	src/kvpaxos/test_test.go	8;"	i	line:8
+fmt	src/lockservice/client.go	4;"	i	line:4
+fmt	src/lockservice/server.go	7;"	i	line:7
+fmt	src/lockservice/test_test.go	9;"	i	line:9
+fmt	src/main/diskvd.go	21;"	i	line:21
+fmt	src/main/lockc.go	9;"	i	line:9
+fmt	src/main/lockd.go	17;"	i	line:17
+fmt	src/main/pbc.go	23;"	i	line:23
+fmt	src/main/pbd.go	10;"	i	line:10
+fmt	src/main/viewd.go	10;"	i	line:10
+fmt	src/main/wc.go	4;"	i	line:4
+fmt	src/mapreduce/common.go	3;"	i	line:3
+fmt	src/mapreduce/mapreduce.go	3;"	i	line:3
+fmt	src/mapreduce/master.go	4;"	i	line:4
+fmt	src/mapreduce/test_test.go	4;"	i	line:4
+fmt	src/mapreduce/worker.go	3;"	i	line:3
+fmt	src/paxos/paxos.go	31;"	i	line:31
+fmt	src/paxos/test_test.go	8;"	i	line:8
+fmt	src/pbservice/client.go	5;"	i	line:5
+fmt	src/pbservice/server.go	4;"	i	line:4
+fmt	src/pbservice/test_test.go	4;"	i	line:4
+fmt	src/shardkv/client.go	7;"	i	line:7
+fmt	src/shardkv/server.go	4;"	i	line:4
+fmt	src/shardkv/test_test.go	9;"	i	line:9
+fmt	src/shardmaster/client.go	10;"	i	line:10
+fmt	src/shardmaster/server.go	4;"	i	line:4
+fmt	src/shardmaster/test_test.go	9;"	i	line:9
+fmt	src/viewservice/client.go	4;"	i	line:4
+fmt	src/viewservice/server.go	8;"	i	line:8
+fmt	src/viewservice/test_test.go	6;"	i	line:6
+get_config_copy	src/shardmaster/server.go	51;"	f	access:private	line:51	signature:(target Config)	type:Config
+gid	src/diskv/server.go	46;"	w	access:private	ctype:DisKV	line:46	type:int64
+gid	src/diskv/test_test.go	30;"	w	access:private	ctype:tGroup	line:30	type:int64
+gid	src/shardkv/server.go	42;"	w	access:private	ctype:ShardKV	line:42	type:int64
+gid	src/shardkv/test_test.go	16;"	w	access:private	ctype:tGroup	line:16	type:int64
+groups	src/diskv/test_test.go	42;"	w	access:private	ctype:tCluster	line:42	type:[]*tGroup
+groups	src/shardkv/test_test.go	27;"	w	access:private	ctype:tCluster	line:27	type:[]*tGroup
+hash/fnv	src/mapreduce/mapreduce.go	13;"	i	line:13
+highestAccept	src/paxos/paxos.go	83;"	w	access:private	ctype:Agree	line:83	type:ProposalId
+highestProposal	src/paxos/paxos.go	82;"	w	access:private	ctype:Agree	line:82	type:ProposalId
+ihash	src/mapreduce/mapreduce.go	185;"	f	access:private	line:185	signature:(s string)	type:uint32
+io	src/lockservice/server.go	9;"	i	line:9
+io	src/pbservice/test_test.go	5;"	i	line:5
+io/ioutil	src/diskv/server.go	17;"	i	line:17
+io/ioutil	src/diskv/test_test.go	13;"	i	line:13
+isdead	src/diskv/server.go	170;"	m	access:private	ctype:DisKV	line:170	signature:()	type:bool
+isdead	src/kvpaxos/server.go	233;"	m	access:private	ctype:KVPaxos	line:233	signature:()	type:bool
+isdead	src/paxos/paxos.go	525;"	m	access:private	ctype:Paxos	line:525	signature:()	type:bool
+isdead	src/pbservice/server.go	64;"	m	access:private	ctype:PBServer	line:64	signature:()	type:bool
+isdead	src/shardkv/server.go	75;"	m	access:private	ctype:ShardKV	line:75	signature:()	type:bool
+isdead	src/shardmaster/server.go	120;"	m	access:private	ctype:ShardMaster	line:120	signature:()	type:bool
+isdead	src/viewservice/server.go	67;"	m	access:private	ctype:ViewServer	line:67	signature:()	type:bool
+isunreliable	src/diskv/server.go	183;"	m	access:private	ctype:DisKV	line:183	signature:()	type:bool
+isunreliable	src/kvpaxos/server.go	246;"	m	access:private	ctype:KVPaxos	line:246	signature:()	type:bool
+isunreliable	src/paxos/paxos.go	538;"	m	access:private	ctype:Paxos	line:538	signature:()	type:bool
+isunreliable	src/pbservice/server.go	77;"	m	access:private	ctype:PBServer	line:77	signature:()	type:bool
+isunreliable	src/shardkv/server.go	88;"	m	access:private	ctype:ShardKV	line:88	signature:()	type:bool
+isunreliable	src/shardmaster/server.go	133;"	m	access:private	ctype:ShardMaster	line:133	signature:()	type:bool
+join	src/diskv/test_test.go	148;"	m	access:private	ctype:tCluster	line:148	signature:(gi int)
+join	src/shardkv/test_test.go	75;"	m	access:private	ctype:tCluster	line:75	signature:(gi int)
+key2shard	src/diskv/client.go	71;"	f	access:private	line:71	signature:(key string)	type:int
+key2shard	src/shardkv/client.go	71;"	f	access:private	line:71	signature:(key string)	type:int
+kill	src/diskv/server.go	163;"	m	access:private	ctype:DisKV	line:163	signature:()
+kill	src/kvpaxos/server.go	225;"	m	access:private	ctype:KVPaxos	line:225	signature:()
+kill	src/lockservice/server.go	63;"	m	access:private	ctype:LockServer	line:63	signature:()
+kill	src/pbservice/server.go	58;"	m	access:private	ctype:PBServer	line:58	signature:()
+kill	src/shardkv/server.go	68;"	m	access:private	ctype:ShardKV	line:68	signature:()
+kill1	src/diskv/test_test.go	103;"	m	access:private	ctype:tCluster	line:103	signature:(gi int, si int, deletefiles bool)
+kvpaxos	src/kvpaxos/client.go	1;"	p	line:1
+kvpaxos	src/kvpaxos/common.go	1;"	p	line:1
+kvpaxos	src/kvpaxos/server.go	1;"	p	line:1
+kvpaxos	src/kvpaxos/test_test.go	1;"	p	line:1
+l	src/diskv/server.go	38;"	w	access:private	ctype:DisKV	line:38	type:net.Listener
+l	src/kvpaxos/server.go	35;"	w	access:private	ctype:KVPaxos	line:35	type:net.Listener
+l	src/lockservice/server.go	14;"	w	access:private	ctype:LockServer	line:14	type:net.Listener
+l	src/mapreduce/mapreduce.go	60;"	w	access:private	ctype:MapReduce	line:60	type:net.Listener
+l	src/mapreduce/worker.go	18;"	w	access:private	ctype:Worker	line:18	type:net.Listener
+l	src/paxos/paxos.go	89;"	w	access:private	ctype:Paxos	line:89	type:net.Listener
+l	src/pbservice/server.go	19;"	w	access:private	ctype:PBServer	line:19	type:net.Listener
+l	src/shardkv/server.go	35;"	w	access:private	ctype:ShardKV	line:35	type:net.Listener
+l	src/shardmaster/server.go	64;"	w	access:private	ctype:ShardMaster	line:64	type:net.Listener
+l	src/viewservice/server.go	14;"	w	access:private	ctype:ViewServer	line:14	type:net.Listener
+latestConfig	src/shardmaster/server.go	47;"	m	access:private	ctype:ShardMaster	line:47	signature:()	type:Config
+learn	src/kvpaxos/server.go	181;"	m	access:private	ctype:KVPaxos	line:181	signature:(seq int)	type:paxos.Fate, Op
+leave	src/diskv/test_test.go	156;"	m	access:private	ctype:tCluster	line:156	signature:(gi int)
+leave	src/shardkv/test_test.go	79;"	m	access:private	ctype:tCluster	line:79	signature:(gi int)
+locks	src/lockservice/server.go	22;"	w	access:private	ctype:LockServer	line:22	type:map[string]bool
+lockservice	src/lockservice/client.go	1;"	p	line:1
+lockservice	src/lockservice/common.go	1;"	p	line:1
+lockservice	src/lockservice/server.go	1;"	p	line:1
+lockservice	src/lockservice/test_test.go	1;"	p	line:1
+lockservice	src/main/lockc.go	7;"	i	line:7
+lockservice	src/main/lockd.go	15;"	i	line:15
+log	src/diskv/server.go	6;"	i	line:6
+log	src/diskv/test_test.go	14;"	i	line:14
+log	src/kvpaxos/server.go	42;"	w	access:private	ctype:KVPaxos	line:42	type:map[int64]bool
+log	src/kvpaxos/server.go	6;"	i	line:6
+log	src/lockservice/server.go	5;"	i	line:5
+log	src/mapreduce/mapreduce.go	5;"	i	line:5
+log	src/mapreduce/test_test.go	10;"	i	line:10
+log	src/mapreduce/worker.go	5;"	i	line:5
+log	src/paxos/paxos.go	25;"	i	line:25
+log	src/paxos/paxos.go	98;"	w	access:private	ctype:Paxos	line:98	type:map[int]*Agree
+log	src/pbservice/server.go	6;"	i	line:6
+log	src/pbservice/test_test.go	9;"	i	line:9
+log	src/shardkv/server.go	6;"	i	line:6
+log	src/shardmaster/server.go	6;"	i	line:6
+log	src/viewservice/server.go	5;"	i	line:5
+main	src/main/diskvd.go	1;"	p	line:1
+main	src/main/diskvd.go	30;"	f	access:private	line:30	signature:()
+main	src/main/lockc.go	16;"	f	access:private	line:16	signature:()
+main	src/main/lockc.go	1;"	p	line:1
+main	src/main/lockd.go	19;"	f	access:private	line:19	signature:()
+main	src/main/lockd.go	1;"	p	line:1
+main	src/main/pbc.go	1;"	p	line:1
+main	src/main/pbc.go	31;"	f	access:private	line:31	signature:()
+main	src/main/pbd.go	12;"	f	access:private	line:12	signature:()
+main	src/main/pbd.go	1;"	p	line:1
+main	src/main/viewd.go	12;"	f	access:private	line:12	signature:()
+main	src/main/viewd.go	1;"	p	line:1
+main	src/main/wc.go	1;"	p	line:1
+main	src/main/wc.go	27;"	f	access:private	line:27	signature:()
+makeAgreement	src/kvpaxos/server.go	124;"	m	access:private	ctype:KVPaxos	line:124	signature:(seq int, op Op)	type:bool
+makeInput	src/mapreduce/test_test.go	96;"	f	access:private	line:96	signature:()	type:string
+make_agreement	src/shardmaster/server.go	43;"	m	access:private	ctype:ShardMaster	line:43	signature:(v Op)	type:paxos.Fate
+mapreduce	src/main/wc.go	5;"	i	line:5
+mapreduce	src/mapreduce/common.go	1;"	p	line:1
+mapreduce	src/mapreduce/mapreduce.go	1;"	p	line:1
+mapreduce	src/mapreduce/master.go	1;"	p	line:1
+mapreduce	src/mapreduce/test_test.go	1;"	p	line:1
+mapreduce	src/mapreduce/worker.go	1;"	p	line:1
+masterports	src/diskv/test_test.go	41;"	w	access:private	ctype:tCluster	line:41	type:[]string
+masterports	src/shardkv/test_test.go	26;"	w	access:private	ctype:tCluster	line:26	type:[]string
+masters	src/diskv/test_test.go	39;"	w	access:private	ctype:tCluster	line:39	type:[]*shardmaster.ShardMaster
+masters	src/shardkv/test_test.go	24;"	w	access:private	ctype:tCluster	line:24	type:[]*shardmaster.ShardMaster
+math/big	src/diskv/client.go	9;"	i	line:9
+math/big	src/kvpaxos/client.go	5;"	i	line:5
+math/big	src/pbservice/client.go	8;"	i	line:8
+math/big	src/shardkv/client.go	9;"	i	line:9
+math/rand	src/diskv/server.go	15;"	i	line:15
+math/rand	src/diskv/test_test.go	15;"	i	line:15
+math/rand	src/kvpaxos/server.go	14;"	i	line:14
+math/rand	src/kvpaxos/test_test.go	9;"	i	line:9
+math/rand	src/lockservice/test_test.go	5;"	i	line:5
+math/rand	src/paxos/paxos.go	32;"	i	line:32
+math/rand	src/paxos/test_test.go	9;"	i	line:9
+math/rand	src/pbservice/server.go	13;"	i	line:13
+math/rand	src/pbservice/test_test.go	11;"	i	line:11
+math/rand	src/shardkv/server.go	14;"	i	line:14
+math/rand	src/shardkv/test_test.go	12;"	i	line:12
+math/rand	src/shardmaster/server.go	14;"	i	line:14
+math/rand	src/shardmaster/test_test.go	10;"	i	line:10
+mck	src/diskv/test_test.go	40;"	w	access:private	ctype:tCluster	line:40	type:*shardmaster.Clerk
+mck	src/shardkv/test_test.go	25;"	w	access:private	ctype:tCluster	line:25	type:*shardmaster.Clerk
+me	src/diskv/server.go	39;"	w	access:private	ctype:DisKV	line:39	type:int
+me	src/kvpaxos/client.go	13;"	w	access:private	ctype:Clerk	line:13	type:int64
+me	src/kvpaxos/server.go	36;"	w	access:private	ctype:KVPaxos	line:36	type:int
+me	src/paxos/paxos.go	94;"	w	access:private	ctype:Paxos	line:94	type:int
+me	src/pbservice/server.go	22;"	w	access:private	ctype:PBServer	line:22	type:string
+me	src/shardkv/server.go	36;"	w	access:private	ctype:ShardKV	line:36	type:int
+me	src/shardmaster/server.go	65;"	w	access:private	ctype:ShardMaster	line:65	type:int
+me	src/viewservice/client.go	11;"	w	access:private	ctype:Clerk	line:11	type:string
+me	src/viewservice/server.go	17;"	w	access:private	ctype:ViewServer	line:17	type:string
+mins	src/paxos/paxos.go	99;"	w	access:private	ctype:Paxos	line:99	type:[]int
+mu	src/diskv/client.go	12;"	w	access:private	ctype:Clerk	line:12	type:sync.Mutex
+mu	src/diskv/server.go	37;"	w	access:private	ctype:DisKV	line:37	type:sync.Mutex
+mu	src/kvpaxos/server.go	34;"	w	access:private	ctype:KVPaxos	line:34	type:sync.Mutex
+mu	src/lockservice/server.go	13;"	w	access:private	ctype:LockServer	line:13	type:sync.Mutex
+mu	src/paxos/paxos.go	88;"	w	access:private	ctype:Paxos	line:88	type:sync.Mutex
+mu	src/pbservice/server.go	18;"	w	access:private	ctype:PBServer	line:18	type:sync.Mutex
+mu	src/shardkv/client.go	12;"	w	access:private	ctype:Clerk	line:12	type:sync.Mutex
+mu	src/shardkv/server.go	34;"	w	access:private	ctype:ShardKV	line:34	type:sync.Mutex
+mu	src/shardmaster/server.go	63;"	w	access:private	ctype:ShardMaster	line:63	type:sync.Mutex
+mu	src/viewservice/server.go	13;"	w	access:private	ctype:ViewServer	line:13	type:sync.Mutex
+nJobs	src/mapreduce/worker.go	17;"	w	access:private	ctype:Worker	line:17	type:int
+nMap	src/mapreduce/mapreduce.go	53;"	w	access:private	ctype:MapReduce	line:53	type:int
+nMap	src/mapreduce/test_test.go	16;"	c	access:private	line:16
+nNumber	src/mapreduce/test_test.go	15;"	c	access:private	line:15
+nRPC	src/mapreduce/worker.go	16;"	w	access:private	ctype:Worker	line:16	type:int
+nReduce	src/mapreduce/mapreduce.go	54;"	w	access:private	ctype:MapReduce	line:54	type:int
+nReduce	src/mapreduce/test_test.go	17;"	c	access:private	line:17
+name	src/mapreduce/worker.go	13;"	w	access:private	ctype:Worker	line:13	type:string
+ndecided	src/paxos/test_test.go	32;"	f	access:private	line:32	signature:(t *testing.T, pxa []*Paxos, seq int)	type:int
+net	src/diskv/server.go	3;"	i	line:3
+net	src/kvpaxos/server.go	3;"	i	line:3
+net	src/lockservice/server.go	3;"	i	line:3
+net	src/mapreduce/mapreduce.go	11;"	i	line:11
+net	src/mapreduce/worker.go	7;"	i	line:7
+net	src/paxos/paxos.go	23;"	i	line:23
+net	src/pbservice/server.go	3;"	i	line:3
+net	src/pbservice/test_test.go	6;"	i	line:6
+net	src/shardkv/server.go	3;"	i	line:3
+net	src/shardmaster/server.go	3;"	i	line:3
+net	src/viewservice/server.go	3;"	i	line:3
+net/rpc	src/diskv/client.go	4;"	i	line:4
+net/rpc	src/diskv/server.go	5;"	i	line:5
+net/rpc	src/kvpaxos/client.go	3;"	i	line:3
+net/rpc	src/kvpaxos/server.go	5;"	i	line:5
+net/rpc	src/lockservice/client.go	3;"	i	line:3
+net/rpc	src/lockservice/server.go	4;"	i	line:4
+net/rpc	src/mapreduce/common.go	4;"	i	line:4
+net/rpc	src/mapreduce/mapreduce.go	10;"	i	line:10
+net/rpc	src/mapreduce/worker.go	6;"	i	line:6
+net/rpc	src/paxos/paxos.go	24;"	i	line:24
+net/rpc	src/pbservice/client.go	4;"	i	line:4
+net/rpc	src/pbservice/server.go	5;"	i	line:5
+net/rpc	src/shardkv/client.go	4;"	i	line:4
+net/rpc	src/shardkv/server.go	5;"	i	line:5
+net/rpc	src/shardmaster/client.go	8;"	i	line:8
+net/rpc	src/shardmaster/server.go	5;"	i	line:5
+net/rpc	src/viewservice/client.go	3;"	i	line:3
+net/rpc	src/viewservice/server.go	4;"	i	line:4
+newport	src/diskv/test_test.go	52;"	m	access:private	ctype:tCluster	line:52	signature:()	type:string
+noTestSpeed	src/paxos/test_test.go	88;"	f	access:private	line:88	signature:(t *testing.T)
+nrand	src/diskv/client.go	18;"	f	access:private	line:18	signature:()	type:int64
+nrand	src/kvpaxos/client.go	17;"	f	access:private	line:17	signature:()	type:int64
+nrand	src/pbservice/client.go	17;"	f	access:private	line:17	signature:()	type:int64
+nrand	src/shardkv/client.go	18;"	f	access:private	line:18	signature:()	type:int64
+os	src/diskv/server.go	11;"	i	line:11
+os	src/diskv/test_test.go	8;"	i	line:8
+os	src/kvpaxos/server.go	10;"	i	line:10
+os	src/kvpaxos/test_test.go	6;"	i	line:6
+os	src/lockservice/server.go	8;"	i	line:8
+os	src/lockservice/test_test.go	6;"	i	line:6
+os	src/main/diskvd.go	20;"	i	line:20
+os	src/main/lockc.go	8;"	i	line:8
+os	src/main/lockd.go	16;"	i	line:16
+os	src/main/pbc.go	22;"	i	line:22
+os	src/main/pbd.go	9;"	i	line:9
+os	src/main/viewd.go	9;"	i	line:9
+os	src/main/wc.go	3;"	i	line:3
+os	src/mapreduce/mapreduce.go	4;"	i	line:4
+os	src/mapreduce/test_test.go	8;"	i	line:8
+os	src/mapreduce/worker.go	4;"	i	line:4
+os	src/paxos/paxos.go	27;"	i	line:27
+os	src/paxos/test_test.go	6;"	i	line:6
+os	src/pbservice/server.go	11;"	i	line:11
+os	src/pbservice/test_test.go	12;"	i	line:12
+os	src/shardkv/server.go	11;"	i	line:11
+os	src/shardkv/test_test.go	7;"	i	line:7
+os	src/shardmaster/server.go	11;"	i	line:11
+os	src/shardmaster/test_test.go	6;"	i	line:6
+os	src/viewservice/server.go	9;"	i	line:9
+os	src/viewservice/test_test.go	7;"	i	line:7
+os/exec	src/diskv/test_test.go	9;"	i	line:9
+p	src/diskv/test_test.go	22;"	w	access:private	ctype:tServer	line:22	type:*os.Process
+part	src/kvpaxos/test_test.go	208;"	f	access:private	line:208	signature:(t *testing.T, tag string, npaxos int, p1 []int, p2 []int, p3 []int)
+part	src/paxos/test_test.go	731;"	f	access:private	line:731	signature:(t *testing.T, tag string, npaxos int, p1 []int, p2 []int, p3 []int)
+path/filepath	src/diskv/test_test.go	18;"	i	line:18
+paxos	src/diskv/server.go	8;"	i	line:8
+paxos	src/kvpaxos/server.go	7;"	i	line:7
+paxos	src/paxos/paxos.go	1;"	p	line:1
+paxos	src/paxos/test_test.go	1;"	p	line:1
+paxos	src/shardkv/server.go	8;"	i	line:8
+paxos	src/shardmaster/server.go	8;"	i	line:8
+pbservice	src/main/pbc.go	21;"	i	line:21
+pbservice	src/main/pbd.go	8;"	i	line:8
+pbservice	src/pbservice/client.go	1;"	p	line:1
+pbservice	src/pbservice/common.go	1;"	p	line:1
+pbservice	src/pbservice/server.go	1;"	p	line:1
+pbservice	src/pbservice/test_test.go	1;"	p	line:1
+peers	src/paxos/paxos.go	93;"	w	access:private	ctype:Paxos	line:93	type:[]string
+port	src/diskv/test_test.go	23;"	w	access:private	ctype:tServer	line:23	type:string
+port	src/kvpaxos/test_test.go	20;"	f	access:private	line:20	signature:(tag string, host int)	type:string
+port	src/lockservice/test_test.go	30;"	f	access:private	line:30	signature:(suffix string)	type:string
+port	src/mapreduce/test_test.go	114;"	f	access:private	line:114	signature:(suffix string)	type:string
+port	src/paxos/test_test.go	21;"	f	access:private	line:21	signature:(tag string, host int)	type:string
+port	src/pbservice/test_test.go	25;"	f	access:private	line:25	signature:(tag string, host int)	type:string
+port	src/shardkv/test_test.go	30;"	f	access:private	line:30	signature:(tag string, host int)	type:string
+port	src/shardmaster/test_test.go	12;"	f	access:private	line:12	signature:(tag string, host int)	type:string
+port	src/viewservice/test_test.go	26;"	f	access:private	line:26	signature:(suffix string)	type:string
+ports	src/shardkv/test_test.go	18;"	w	access:private	ctype:tGroup	line:18	type:[]string
+pp	src/kvpaxos/test_test.go	189;"	f	access:private	line:189	signature:(tag string, src int, dst int)	type:string
+pp	src/paxos/test_test.go	712;"	f	access:private	line:712	signature:(tag string, src int, dst int)	type:string
+printStatus	src/kvpaxos/server.go	209;"	m	access:private	ctype:KVPaxos	line:209	signature:(seq int, status paxos.Fate)
+processed	src/kvpaxos/server.go	44;"	w	access:private	ctype:KVPaxos	line:44	type:int
+proxy	src/pbservice/test_test.go	890;"	f	access:private	line:890	signature:(t *testing.T, port string, delay *int32)
+px	src/diskv/server.go	43;"	w	access:private	ctype:DisKV	line:43	type:*paxos.Paxos
+px	src/kvpaxos/server.go	39;"	w	access:private	ctype:KVPaxos	line:39	type:*paxos.Paxos
+px	src/shardkv/server.go	40;"	w	access:private	ctype:ShardKV	line:40	type:*paxos.Paxos
+px	src/shardmaster/server.go	68;"	w	access:private	ctype:ShardMaster	line:68	type:*paxos.Paxos
+randclerk	src/kvpaxos/test_test.go	330;"	f	access:private	line:330	signature:(kvh []string)	type:*Clerk
+randstring	src/diskv/test_test.go	45;"	f	access:private	line:45	signature:(n int)	type:string
+randstring	src/paxos/test_test.go	14;"	f	access:private	line:14	signature:(n int)	type:string
+registerChannel	src/mapreduce/mapreduce.go	57;"	w	access:private	ctype:MapReduce	line:57	type:chan string
+replied	src/kvpaxos/server.go	40;"	w	access:private	ctype:KVPaxos	line:40	type:map[int64]string
+rpcCount	src/paxos/paxos.go	92;"	w	access:private	ctype:Paxos	line:92	type:int32
+rpccount	src/viewservice/server.go	16;"	w	access:private	ctype:ViewServer	line:16	type:int32
+runtime	src/diskv/test_test.go	5;"	i	line:5
+runtime	src/kvpaxos/test_test.go	4;"	i	line:4
+runtime	src/lockservice/test_test.go	4;"	i	line:4
+runtime	src/main/diskvd.go	23;"	i	line:23
+runtime	src/paxos/test_test.go	4;"	i	line:4
+runtime	src/pbservice/test_test.go	10;"	i	line:10
+runtime	src/shardkv/test_test.go	5;"	i	line:5
+runtime	src/shardmaster/test_test.go	4;"	i	line:4
+runtime	src/viewservice/test_test.go	4;"	i	line:4
+server	src/viewservice/client.go	12;"	w	access:private	ctype:Clerk	line:12	type:string
+servers	src/diskv/test_test.go	31;"	w	access:private	ctype:tGroup	line:31	type:[]*tServer
+servers	src/kvpaxos/client.go	12;"	w	access:private	ctype:Clerk	line:12	type:[]string
+servers	src/lockservice/client.go	12;"	w	access:private	ctype:Clerk	line:12	type:[2]string
+servers	src/shardkv/test_test.go	17;"	w	access:private	ctype:tGroup	line:17	type:[]*ShardKV
+servers	src/shardmaster/client.go	13;"	w	access:private	ctype:Clerk	line:13	type:[]string
+setunreliable	src/kvpaxos/server.go	238;"	m	access:private	ctype:KVPaxos	line:238	signature:(what bool)
+setunreliable	src/paxos/paxos.go	530;"	m	access:private	ctype:Paxos	line:530	signature:(what bool)
+setunreliable	src/pbservice/server.go	69;"	m	access:private	ctype:PBServer	line:69	signature:(what bool)
+setunreliable	src/shardmaster/server.go	125;"	m	access:private	ctype:ShardMaster	line:125	signature:(what bool)
+setup	src/diskv/test_test.go	173;"	f	access:private	ctype:tCluster	line:173	signature:(t *testing.T, tag string, ngroups int, nreplicas int, unreliable bool)	type:*tCluster
+setup	src/mapreduce/test_test.go	124;"	f	access:private	line:124	signature:()	type:*MapReduce
+setup	src/shardkv/test_test.go	83;"	f	access:private	ctype:tCluster	line:83	signature:(t *testing.T, tag string, unreliable bool)	type:*tCluster
+shardDir	src/diskv/server.go	59;"	m	access:private	ctype:DisKV	line:59	signature:(shard int)	type:string
+shardclerk	src/diskv/test_test.go	140;"	m	access:private	ctype:tCluster	line:140	signature:()	type:*shardmaster.Clerk
+shardclerk	src/shardkv/test_test.go	67;"	m	access:private	ctype:tCluster	line:67	signature:()	type:*shardmaster.Clerk
+shardkv	src/shardkv/client.go	1;"	p	line:1
+shardkv	src/shardkv/common.go	1;"	p	line:1
+shardkv	src/shardkv/server.go	1;"	p	line:1
+shardkv	src/shardkv/test_test.go	1;"	p	line:1
+shardmaster	src/diskv/client.go	3;"	i	line:3
+shardmaster	src/diskv/server.go	16;"	i	line:16
+shardmaster	src/diskv/test_test.go	4;"	i	line:4
+shardmaster	src/shardkv/client.go	3;"	i	line:3
+shardmaster	src/shardkv/server.go	15;"	i	line:15
+shardmaster	src/shardkv/test_test.go	4;"	i	line:4
+shardmaster	src/shardmaster/client.go	1;"	p	line:1
+shardmaster	src/shardmaster/common.go	1;"	p	line:1
+shardmaster	src/shardmaster/server.go	1;"	p	line:1
+shardmaster	src/shardmaster/test_test.go	1;"	p	line:1
+sm	src/diskv/client.go	13;"	w	access:private	ctype:Clerk	line:13	type:*shardmaster.Clerk
+sm	src/diskv/server.go	42;"	w	access:private	ctype:DisKV	line:42	type:*shardmaster.Clerk
+sm	src/shardkv/client.go	13;"	w	access:private	ctype:Clerk	line:13	type:*shardmaster.Clerk
+sm	src/shardkv/server.go	39;"	w	access:private	ctype:ShardKV	line:39	type:*shardmaster.Clerk
+sort	src/mapreduce/mapreduce.go	8;"	i	line:8
+sort	src/mapreduce/test_test.go	11;"	i	line:11
+space	src/diskv/test_test.go	161;"	m	access:private	ctype:tCluster	line:161	signature:()	type:int64
+start1	src/diskv/test_test.go	62;"	m	access:private	ctype:tCluster	line:62	signature:(gi int, si int)
+start1	src/shardkv/test_test.go	44;"	m	access:private	ctype:tCluster	line:44	signature:(gi int, si int, unreliable bool)
+started	src/diskv/test_test.go	25;"	w	access:private	ctype:tServer	line:25	type:bool
+stats	src/mapreduce/mapreduce.go	61;"	w	access:private	ctype:MapReduce	line:61	type:*list.List
+strconv	src/diskv/server.go	18;"	i	line:18
+strconv	src/diskv/test_test.go	6;"	i	line:6
+strconv	src/kvpaxos/test_test.go	5;"	i	line:5
+strconv	src/lockservice/test_test.go	7;"	i	line:7
+strconv	src/main/diskvd.go	22;"	i	line:22
+strconv	src/mapreduce/mapreduce.go	6;"	i	line:6
+strconv	src/mapreduce/test_test.go	12;"	i	line:12
+strconv	src/paxos/test_test.go	5;"	i	line:5
+strconv	src/pbservice/test_test.go	14;"	i	line:14
+strconv	src/shardkv/test_test.go	6;"	i	line:6
+strconv	src/shardmaster/test_test.go	5;"	i	line:5
+strconv	src/viewservice/test_test.go	8;"	i	line:8
+strings	src/diskv/test_test.go	7;"	i	line:7
+strings	src/kvpaxos/test_test.go	10;"	i	line:10
+strings	src/mapreduce/test_test.go	7;"	i	line:7
+strings	src/pbservice/test_test.go	15;"	i	line:15
+sync	src/diskv/client.go	6;"	i	line:6
+sync	src/diskv/server.go	9;"	i	line:9
+sync	src/diskv/test_test.go	12;"	i	line:12
+sync	src/kvpaxos/server.go	8;"	i	line:8
+sync	src/lockservice/server.go	6;"	i	line:6
+sync	src/paxos/paxos.go	29;"	i	line:29
+sync	src/pbservice/server.go	9;"	i	line:9
+sync	src/pbservice/test_test.go	13;"	i	line:13
+sync	src/shardkv/client.go	6;"	i	line:6
+sync	src/shardkv/server.go	9;"	i	line:9
+sync	src/shardkv/test_test.go	10;"	i	line:10
+sync	src/shardmaster/server.go	9;"	i	line:9
+sync	src/viewservice/server.go	7;"	i	line:7
+sync/atomic	src/diskv/server.go	10;"	i	line:10
+sync/atomic	src/diskv/test_test.go	19;"	i	line:19
+sync/atomic	src/kvpaxos/server.go	9;"	i	line:9
+sync/atomic	src/kvpaxos/test_test.go	11;"	i	line:11
+sync/atomic	src/paxos/paxos.go	30;"	i	line:30
+sync/atomic	src/paxos/test_test.go	12;"	i	line:12
+sync/atomic	src/pbservice/server.go	10;"	i	line:10
+sync/atomic	src/pbservice/test_test.go	16;"	i	line:16
+sync/atomic	src/shardkv/server.go	10;"	i	line:10
+sync/atomic	src/shardkv/test_test.go	11;"	i	line:11
+sync/atomic	src/shardmaster/server.go	10;"	i	line:10
+sync/atomic	src/viewservice/server.go	10;"	i	line:10
+syscall	src/diskv/server.go	12;"	i	line:12
+syscall	src/kvpaxos/server.go	12;"	i	line:12
+syscall	src/paxos/paxos.go	28;"	i	line:28
+syscall	src/pbservice/server.go	12;"	i	line:12
+syscall	src/shardkv/server.go	12;"	i	line:12
+syscall	src/shardmaster/server.go	12;"	i	line:12
+t	src/diskv/test_test.go	36;"	w	access:private	ctype:tCluster	line:36	type:*testing.T
+t	src/shardkv/test_test.go	23;"	w	access:private	ctype:tCluster	line:23	type:*testing.T
+tCluster	src/diskv/test_test.go	35;"	t	access:private	line:35	type:struct
+tCluster	src/shardkv/test_test.go	22;"	t	access:private	line:22	type:struct
+tGroup	src/diskv/test_test.go	29;"	t	access:private	line:29	type:struct
+tGroup	src/shardkv/test_test.go	15;"	t	access:private	line:15	type:struct
+tServer	src/diskv/test_test.go	21;"	t	access:private	line:21	type:struct
+testing	src/diskv/test_test.go	3;"	i	line:3
+testing	src/kvpaxos/test_test.go	3;"	i	line:3
+testing	src/lockservice/test_test.go	3;"	i	line:3
+testing	src/mapreduce/test_test.go	3;"	i	line:3
+testing	src/paxos/test_test.go	3;"	i	line:3
+testing	src/pbservice/test_test.go	7;"	i	line:7
+testing	src/shardkv/test_test.go	3;"	i	line:3
+testing	src/shardmaster/test_test.go	3;"	i	line:3
+testing	src/viewservice/test_test.go	3;"	i	line:3
+tick	src/diskv/server.go	157;"	m	access:private	ctype:DisKV	line:157	signature:()
+tick	src/pbservice/server.go	51;"	m	access:private	ctype:PBServer	line:51	signature:()
+tick	src/shardkv/server.go	63;"	m	access:private	ctype:ShardKV	line:63	signature:()
+tick	src/viewservice/server.go	49;"	m	access:private	ctype:ViewServer	line:49	signature:()
+time	src/diskv/client.go	5;"	i	line:5
+time	src/diskv/server.go	7;"	i	line:7
+time	src/diskv/test_test.go	10;"	i	line:10
+time	src/kvpaxos/server.go	11;"	i	line:11
+time	src/kvpaxos/test_test.go	7;"	i	line:7
+time	src/lockservice/server.go	10;"	i	line:10
+time	src/lockservice/test_test.go	8;"	i	line:8
+time	src/main/diskvd.go	18;"	i	line:18
+time	src/main/lockd.go	14;"	i	line:14
+time	src/main/pbd.go	7;"	i	line:7
+time	src/main/viewd.go	7;"	i	line:7
+time	src/mapreduce/test_test.go	5;"	i	line:5
+time	src/paxos/paxos.go	33;"	i	line:33
+time	src/paxos/test_test.go	7;"	i	line:7
+time	src/pbservice/server.go	7;"	i	line:7
+time	src/pbservice/test_test.go	8;"	i	line:8
+time	src/shardkv/client.go	5;"	i	line:5
+time	src/shardkv/server.go	7;"	i	line:7
+time	src/shardkv/test_test.go	8;"	i	line:8
+time	src/shardmaster/client.go	9;"	i	line:9
+time	src/shardmaster/server.go	15;"	i	line:15
+time	src/viewservice/common.go	3;"	i	line:3
+time	src/viewservice/server.go	6;"	i	line:6
+time	src/viewservice/test_test.go	5;"	i	line:5
+tl	src/lockservice/test_test.go	11;"	f	access:private	line:11	signature:(t *testing.T, ck *Clerk, lockname string, expected bool)
+tu	src/lockservice/test_test.go	18;"	f	access:private	line:18	signature:(t *testing.T, ck *Clerk, lockname string, expected bool)
+unreliable	src/diskv/server.go	41;"	w	access:private	ctype:DisKV	line:41	type:int32
+unreliable	src/diskv/test_test.go	38;"	w	access:private	ctype:tCluster	line:38	type:bool
+unreliable	src/kvpaxos/server.go	38;"	w	access:private	ctype:KVPaxos	line:38	type:int32
+unreliable	src/paxos/paxos.go	91;"	w	access:private	ctype:Paxos	line:91	type:int32
+unreliable	src/pbservice/server.go	21;"	w	access:private	ctype:PBServer	line:21	type:int32
+unreliable	src/shardkv/server.go	38;"	w	access:private	ctype:ShardKV	line:38	type:int32
+unreliable	src/shardmaster/server.go	67;"	w	access:private	ctype:ShardMaster	line:67	type:int32
+updateDbAndGetValue	src/kvpaxos/server.go	139;"	m	access:private	ctype:KVPaxos	line:139	signature:(key string)	type:string, Err
+usage	src/main/diskvd.go	25;"	f	access:private	line:25	signature:()
+usage	src/main/lockc.go	11;"	f	access:private	line:11	signature:()
+usage	src/main/pbc.go	25;"	f	access:private	line:25	signature:()
+val	src/paxos/paxos.go	84;"	w	access:private	ctype:Agree	line:84	type:interface{}
+viewservice	src/main/viewd.go	8;"	i	line:8
+viewservice	src/pbservice/client.go	3;"	i	line:3
+viewservice	src/pbservice/server.go	8;"	i	line:8
+viewservice	src/pbservice/test_test.go	3;"	i	line:3
+viewservice	src/viewservice/client.go	1;"	p	line:1
+viewservice	src/viewservice/common.go	1;"	p	line:1
+viewservice	src/viewservice/server.go	1;"	p	line:1
+viewservice	src/viewservice/test_test.go	1;"	p	line:1
+vs	src/pbservice/client.go	12;"	w	access:private	ctype:Clerk	line:12	type:*viewservice.Clerk
+vs	src/pbservice/server.go	23;"	w	access:private	ctype:PBServer	line:23	type:*viewservice.Clerk
+waitmajority	src/paxos/test_test.go	68;"	f	access:private	line:68	signature:(t *testing.T, pxa []*Paxos, seq int)
+waitn	src/paxos/test_test.go	51;"	f	access:private	line:51	signature:(t *testing.T, pxa []*Paxos, seq int, wanted int)

@@ -24,7 +24,16 @@ func DPrintf(format string, a ...interface{}) (n int, err error) {
 	return
 }
 
-func (sm *ShardMaster) checkStatus(seq int) (paxos.Fate, Op) {
+func (sm *ShardMaster) apply_op(op Op) {
+	switch op.Action {
+	case JOIN:
+	case LEAVE:
+	case MOVE:
+	case QUERY:
+	}
+}
+
+func (sm *ShardMaster) check_status(seq int) (paxos.Fate, Op) {
 	to := 10 * time.Millisecond
 	for {
 		status, op := sm.px.Status(seq)
@@ -40,7 +49,74 @@ func (sm *ShardMaster) checkStatus(seq int) (paxos.Fate, Op) {
 	}
 }
 
-/*===================================================*/
+func (sm *ShardMaster) make_agreement(op Op) (paxos.Fate, Config) {
+	seq := sm.px.Max() + 1
+	sm.px.Start(seq, op)
+	for status, v := sm.check_status(seq); v.UUID != op.UUID; status, v = sm.check_status(seq) {
+		if status != paxos.Decided {
+			// failed to reach decision
+			return status, Config{}
+		}
+		seq++
+		sm.px.Start(seq, op)
+	}
+	return paxos.Decided, Config{}
+}
+
+func (sm *ShardMaster) latest_config() Config {
+	return sm.configs[len(sm.configs)-1]
+}
+
+func get_config_copy(target Config) Config {
+	new_group := make(map[int64][]string)
+	for key, value := range target.Groups {
+		new_group[key] = value
+	}
+	new_config := Config{
+		Num:    target.Num,
+		Shards: target.Shards,
+		Groups: new_group,
+	}
+	return new_config
+}
+
+// get the gids of group holding min and max number of shards
+func get_min_max_gid(config *Config) (int64, int64) {
+	min_gid, max_gid := int64(0), int64(0)
+	counts := make(map[int64]int)
+	max, min := -1, 1000
+	for _, group := range config.Shards {
+		counts[group] += 1
+		if counts[group] > max {
+			max = counts[group]
+			max_gid = group
+		} else if counts[group] < min {
+			min = counts[group]
+			min_gid = group
+		}
+	}
+	return min_gid, max_gid
+}
+
+func get_shards_by_gid(config *Config) {
+
+}
+
+func (sm *ShardMaster) rebalance(gid int64, servers []string, op string) Config {
+	new_config := get_config_copy(sm.latest_config())
+	new_config.Num += 1
+	for i := 0; ; i++ {
+		if op == JOIN {
+			new_config.
+			if i == NShards/len(new_config.Groups) {
+				break
+			}
+		}
+	}
+	return new_config
+}
+
+/*=====================Interfaces===================*/
 
 type ShardMaster struct {
 	mu         sync.Mutex
@@ -54,12 +130,26 @@ type ShardMaster struct {
 }
 
 type Op struct {
-	config Config
+	UUID    int64
+	Gid     int64
+	Action  string
+	Shard   int
+	Num     int
+	Servers []string
 }
 
 func (sm *ShardMaster) Join(args *JoinArgs, reply *JoinReply) error {
-	// Your code here.
-
+	new_gid := args.GID
+	servers := args.Servers
+	latest_config := sm.latest_config()
+	if _, exist := latest_config.Groups[new_gid]; !exist {
+		sm.make_agreement(Op{
+			UUID:    nrand(),
+			Gid:     new_gid,
+			Action:  JOIN,
+			Servers: servers,
+		})
+	}
 	return nil
 }
 
@@ -70,13 +160,33 @@ func (sm *ShardMaster) Leave(args *LeaveArgs, reply *LeaveReply) error {
 }
 
 func (sm *ShardMaster) Move(args *MoveArgs, reply *MoveReply) error {
-
+	target := args.GID
+	shard := args.Shard
+	new_config := get_config_copy(sm.latest_config())
+	new_config.Num += 1
+	new_config.Shards[shard] = target
+	op := Op{
+		UUID:   nrand(),
+		Gid:    target,
+		Action: MOVE,
+		Shard:  shard,
+	}
+	fate, _ := sm.make_agreement(op)
+	if fate != paxos.Decided {
+		DPrintf("[Move] [Server %d] [Config %d] Failed to reach agreement\n", sm.me, new_config.Num)
+	} else {
+		sm.configs = append(sm.configs, new_config)
+	}
 	return nil
 }
 
 func (sm *ShardMaster) Query(args *QueryArgs, reply *QueryReply) error {
-	// Your code here.
-
+	target := args.Num
+	if target == -1 {
+		reply.Config = sm.latest_config()
+	} else {
+		reply.Config = sm.configs[target]
+	}
 	return nil
 }
 

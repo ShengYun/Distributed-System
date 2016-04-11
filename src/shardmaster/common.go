@@ -20,7 +20,25 @@ package shardmaster
 // Please don't change this file.
 //
 
-const NShards = 10
+import (
+	"crypto/rand"
+	"math/big"
+)
+
+const (
+	NShards = 10
+	JOIN    = "Join"
+	LEAVE   = "Leave"
+	MOVE    = "Move"
+	QUERY   = "Query"
+)
+
+func nrand() int64 {
+	max := big.NewInt(int64(1) << 62)
+	bigx, _ := rand.Int(rand.Reader, max)
+	x := bigx.Int64()
+	return x
+}
 
 type Config struct {
 	Num    int                // config number
