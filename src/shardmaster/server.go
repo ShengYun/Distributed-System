@@ -24,15 +24,6 @@ func DPrintf(format string, a ...interface{}) (n int, err error) {
 	return
 }
 
-func (sm *ShardMaster) apply_op(op Op) {
-	switch op.Action {
-	case JOIN:
-	case LEAVE:
-	case MOVE:
-	case QUERY:
-	}
-}
-
 func (sm *ShardMaster) check_status(seq int) (paxos.Fate, Op) {
 	to := 10 * time.Millisecond
 	for {
@@ -49,18 +40,20 @@ func (sm *ShardMaster) check_status(seq int) (paxos.Fate, Op) {
 	}
 }
 
-func (sm *ShardMaster) make_agreement(op Op) (paxos.Fate, Config) {
-	seq := sm.px.Max() + 1
+func (sm *ShardMaster) make_agreement(op Op) (paxos.Fate, Op) {
+	seq := sm.processed + 1
 	sm.px.Start(seq, op)
 	for status, v := sm.check_status(seq); v.UUID != op.UUID; status, v = sm.check_status(seq) {
 		if status != paxos.Decided {
 			// failed to reach decision
-			return status, Config{}
+			return status, Op{}
 		}
+		sm.apply(v)
+		sm.processed++
 		seq++
 		sm.px.Start(seq, op)
 	}
-	return paxos.Decided, Config{}
+	return paxos.Decided, op
 }
 
 func (sm *ShardMaster) latest_config() Config {
@@ -87,33 +80,108 @@ func get_min_max_gid(config *Config) (int64, int64) {
 	max, min := -1, 1000
 	for _, group := range config.Shards {
 		counts[group] += 1
-		if counts[group] > max {
-			max = counts[group]
-			max_gid = group
-		} else if counts[group] < min {
-			min = counts[group]
-			min_gid = group
+	}
+	for group := range counts {
+		if _, exist := config.Groups[group]; exist {
+			if counts[group] > max {
+				max = counts[group]
+				max_gid = group
+			} else if counts[group] < min {
+				min = counts[group]
+				min_gid = group
+			}
+		}
+	}
+	for _, group := range config.Shards {
+		if group == 0 {
+			max_gid = 0
 		}
 	}
 	return min_gid, max_gid
 }
 
-func get_shards_by_gid(config *Config) {
-
-}
-
-func (sm *ShardMaster) rebalance(gid int64, servers []string, op string) Config {
-	new_config := get_config_copy(sm.latest_config())
-	new_config.Num += 1
-	for i := 0; ; i++ {
-		if op == JOIN {
-			new_config.
-			if i == NShards/len(new_config.Groups) {
-				break
-			}
+func get_shards_by_gid(target int64, config *Config) int {
+	for shard, group := range config.Shards {
+		if group == target {
+			return shard
 		}
 	}
-	return new_config
+	return -1
+}
+
+func (sm *ShardMaster) rebalance(gid int64, op string, config *Config) {
+	pool := []int{}
+	add := []int64{} // groups need more shards
+	average := NShards / len(config.Groups)
+	shards_by_group := make(map[int64][]int)
+	for s, g := range config.Shards {
+		if _, exist := config.Groups[g]; !exist || g == 0 {
+			pool = append(pool, s)
+		} else {
+			shards_by_group[g] = append(shards_by_group[g], s)
+		}
+	}
+	for g, _ := range config.Groups {
+		s := shards_by_group[g]
+		if len(s) > average {
+			pool = append(pool, shards_by_group[g][len(s)-average:]...)
+			shards_by_group[g] = shards_by_group[g][:len(s)-average]
+		} else {
+			add = append(add, g)
+		}
+	}
+
+	for _, g := range add {
+		for i := 0; i < average-len(shards_by_group[g]) && len(pool) > 0; i++ {
+			config.Shards[pool[0]] = g
+			pool = pool[1:]
+		}
+	}
+}
+
+func (sm *ShardMaster) apply(op Op) Config {
+	sm.processed++
+	new_config := get_config_copy(sm.latest_config())
+	new_config.Num += 1
+	switch op.Action {
+	case JOIN:
+		DPrintf("[Join] [Master %d] [Servers: %v -> GID: %d]\n", sm.me, op.Servers, op.Gid)
+		new_config.Groups[op.Gid] = op.Servers
+		sm.rebalance(op.Gid, JOIN, &new_config)
+	case LEAVE:
+		delete(new_config.Groups, op.Gid)
+		sm.rebalance(op.Gid, LEAVE, &new_config)
+	case MOVE:
+		new_config.Shards[op.Shard] = op.Gid
+	case QUERY:
+		if op.Num == -1 {
+			return sm.latest_config()
+		} else {
+			return sm.configs[op.Num]
+		}
+	}
+	sm.px.Done(sm.processed)
+	sm.configs = append(sm.configs, new_config)
+	return Config{}
+}
+
+func (sm *ShardMaster) do(op Op) Config {
+	for true {
+		seq := sm.processed + 1
+		status, v := sm.px.Status(seq)
+		var value Op
+		if status == paxos.Decided {
+			value = v.(Op)
+		} else {
+			sm.px.Start(seq, op)
+			_, value = sm.check_status(seq)
+		}
+		config := sm.apply(value)
+		if value.UUID == op.UUID {
+			return config
+		}
+	}
+	return Config{}
 }
 
 /*=====================Interfaces===================*/
@@ -126,7 +194,8 @@ type ShardMaster struct {
 	unreliable int32 // for testing
 	px         *paxos.Paxos
 
-	configs []Config // indexed by config num
+	configs   []Config // indexed by config num
+	processed int      // processed seq
 }
 
 type Op struct {
@@ -139,11 +208,13 @@ type Op struct {
 }
 
 func (sm *ShardMaster) Join(args *JoinArgs, reply *JoinReply) error {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
 	new_gid := args.GID
 	servers := args.Servers
 	latest_config := sm.latest_config()
 	if _, exist := latest_config.Groups[new_gid]; !exist {
-		sm.make_agreement(Op{
+		sm.do(Op{
 			UUID:    nrand(),
 			Gid:     new_gid,
 			Action:  JOIN,
@@ -154,39 +225,43 @@ func (sm *ShardMaster) Join(args *JoinArgs, reply *JoinReply) error {
 }
 
 func (sm *ShardMaster) Leave(args *LeaveArgs, reply *LeaveReply) error {
-	// Your code here.
-
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+	gid := args.GID
+	latest_config := sm.latest_config()
+	if _, exist := latest_config.Groups[gid]; exist {
+		sm.do(Op{
+			UUID:   nrand(),
+			Gid:    gid,
+			Action: LEAVE,
+		})
+	}
 	return nil
 }
 
 func (sm *ShardMaster) Move(args *MoveArgs, reply *MoveReply) error {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
 	target := args.GID
 	shard := args.Shard
-	new_config := get_config_copy(sm.latest_config())
-	new_config.Num += 1
-	new_config.Shards[shard] = target
-	op := Op{
+	sm.do(Op{
 		UUID:   nrand(),
 		Gid:    target,
 		Action: MOVE,
 		Shard:  shard,
-	}
-	fate, _ := sm.make_agreement(op)
-	if fate != paxos.Decided {
-		DPrintf("[Move] [Server %d] [Config %d] Failed to reach agreement\n", sm.me, new_config.Num)
-	} else {
-		sm.configs = append(sm.configs, new_config)
-	}
+	})
 	return nil
 }
 
 func (sm *ShardMaster) Query(args *QueryArgs, reply *QueryReply) error {
-	target := args.Num
-	if target == -1 {
-		reply.Config = sm.latest_config()
-	} else {
-		reply.Config = sm.configs[target]
-	}
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+	num := args.Num
+	reply.Config = sm.do(Op{
+		UUID:   nrand(),
+		Num:    num,
+		Action: QUERY,
+	})
 	return nil
 }
 
@@ -227,6 +302,7 @@ func StartServer(servers []string, me int) *ShardMaster {
 
 	sm.configs = make([]Config, 1)
 	sm.configs[0].Groups = map[int64][]string{}
+	sm.processed = 0
 
 	rpcs := rpc.NewServer()
 
