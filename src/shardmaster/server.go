@@ -15,7 +15,7 @@ import "math/rand"
 import "time"
 
 /*===============Helper Functions====================*/
-const Debug = 0
+const Debug = 1
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
@@ -40,22 +40,6 @@ func (sm *ShardMaster) check_status(seq int) (paxos.Fate, Op) {
 	}
 }
 
-func (sm *ShardMaster) make_agreement(op Op) (paxos.Fate, Op) {
-	seq := sm.processed + 1
-	sm.px.Start(seq, op)
-	for status, v := sm.check_status(seq); v.UUID != op.UUID; status, v = sm.check_status(seq) {
-		if status != paxos.Decided {
-			// failed to reach decision
-			return status, Op{}
-		}
-		sm.apply(v)
-		sm.processed++
-		seq++
-		sm.px.Start(seq, op)
-	}
-	return paxos.Decided, op
-}
-
 func (sm *ShardMaster) latest_config() Config {
 	return sm.configs[len(sm.configs)-1]
 }
@@ -73,68 +57,65 @@ func get_config_copy(target Config) Config {
 	return new_config
 }
 
-// get the gids of group holding min and max number of shards
-func get_min_max_gid(config *Config) (int64, int64) {
-	min_gid, max_gid := int64(0), int64(0)
-	counts := make(map[int64]int)
-	max, min := -1, 1000
-	for _, group := range config.Shards {
-		counts[group] += 1
-	}
-	for group := range counts {
-		if _, exist := config.Groups[group]; exist {
-			if counts[group] > max {
-				max = counts[group]
-				max_gid = group
-			} else if counts[group] < min {
-				min = counts[group]
-				min_gid = group
-			}
+func remove_element(list *[]int64, target int64) {
+	for i, e := range *list {
+		if e == target {
+			*list = append((*list)[:i], (*list)[i+1:]...)
 		}
 	}
-	for _, group := range config.Shards {
-		if group == 0 {
-			max_gid = 0
-		}
-	}
-	return min_gid, max_gid
 }
 
-func get_shards_by_gid(target int64, config *Config) int {
-	for shard, group := range config.Shards {
-		if group == target {
-			return shard
+func get_min_max_gid(c *Config) (int64, int64) {
+	min_id, min_num, max_id, max_num := int64(0), 999, int64(0), -1
+	counts := map[int64]int{}
+	for g := range c.Groups {
+		counts[g] = 0
+	}
+	for _, g := range c.Shards {
+		counts[g]++
+	}
+	for g := range counts {
+		_, exists := c.Groups[g]
+		if exists && min_num > counts[g] {
+			min_id, min_num = g, counts[g]
+		}
+		if exists && max_num < counts[g] {
+			max_id, max_num = g, counts[g]
+		}
+	}
+	for _, g := range c.Shards {
+		if g == 0 {
+			max_id = 0
+		}
+	}
+	return min_id, max_id
+}
+
+func get_shard_by_gid(gid int64, c *Config) int {
+	for s, g := range c.Shards {
+		if g == gid {
+			return s
 		}
 	}
 	return -1
 }
 
-func (sm *ShardMaster) rebalance(gid int64, op string, config *Config) {
-	pool := []int{}
-	add := []int64{} // groups need more shards
-	average := NShards / len(config.Groups)
-	shards_by_group := make(map[int64][]int)
-	for s, g := range config.Shards {
-		if _, exist := config.Groups[g]; !exist || g == 0 {
-			pool = append(pool, s)
+//rebalancing the workload of shards among different groups
+func (sm *ShardMaster) rebalance(group int64, op string, c *Config) {
+	for i := 0; ; i++ {
+		min_id, max_id := get_min_max_gid(c)
+		if op == LEAVE {
+			s := get_shard_by_gid(group, c)
+			if s == -1 {
+				break
+			}
+			c.Shards[s] = min_id
 		} else {
-			shards_by_group[g] = append(shards_by_group[g], s)
-		}
-	}
-	for g, _ := range config.Groups {
-		s := shards_by_group[g]
-		if len(s) > average {
-			pool = append(pool, shards_by_group[g][len(s)-average:]...)
-			shards_by_group[g] = shards_by_group[g][:len(s)-average]
-		} else {
-			add = append(add, g)
-		}
-	}
-
-	for _, g := range add {
-		for i := 0; i < average-len(shards_by_group[g]) && len(pool) > 0; i++ {
-			config.Shards[pool[0]] = g
-			pool = pool[1:]
+			if i == NShards/len(c.Groups) {
+				break
+			}
+			s := get_shard_by_gid(max_id, c)
+			c.Shards[s] = group
 		}
 	}
 }
@@ -149,6 +130,7 @@ func (sm *ShardMaster) apply(op Op) Config {
 		new_config.Groups[op.Gid] = op.Servers
 		sm.rebalance(op.Gid, JOIN, &new_config)
 	case LEAVE:
+		DPrintf("[Leave] [Master %d] [GID: %d]\n", sm.me, op.Gid)
 		delete(new_config.Groups, op.Gid)
 		sm.rebalance(op.Gid, LEAVE, &new_config)
 	case MOVE:
@@ -228,14 +210,14 @@ func (sm *ShardMaster) Leave(args *LeaveArgs, reply *LeaveReply) error {
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 	gid := args.GID
-	latest_config := sm.latest_config()
-	if _, exist := latest_config.Groups[gid]; exist {
-		sm.do(Op{
-			UUID:   nrand(),
-			Gid:    gid,
-			Action: LEAVE,
-		})
-	}
+	//latest_config := sm.latest_config()
+	//if _, exist := latest_config.Groups[gid]; exist {
+	sm.do(Op{
+		UUID:   nrand(),
+		Gid:    gid,
+		Action: LEAVE,
+	})
+	//}
 	return nil
 }
 
