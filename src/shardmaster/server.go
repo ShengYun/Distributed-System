@@ -126,14 +126,15 @@ func (sm *ShardMaster) apply(op Op) Config {
 	new_config.Num += 1
 	switch op.Action {
 	case JOIN:
-		DPrintf("[Join] [Master %d] [Servers: %v -> GID: %d]\n", sm.me, op.Servers, op.Gid)
+		DPrintf("[Join --> %d] [Master %d] [Servers: %v -> GID: %d]\n", new_config.Num, sm.me, op.Servers, op.Gid)
 		new_config.Groups[op.Gid] = op.Servers
 		sm.rebalance(op.Gid, JOIN, &new_config)
 	case LEAVE:
-		DPrintf("[Leave] [Master %d] [GID: %d]\n", sm.me, op.Gid)
+		DPrintf("[Leave --> %d] [Master %d] [GID: %d]\n", new_config.Num, sm.me, op.Gid)
 		delete(new_config.Groups, op.Gid)
 		sm.rebalance(op.Gid, LEAVE, &new_config)
 	case MOVE:
+		DPrintf("[Move --> %d] [Master %d] [Shard: %v -> GID: %d]\n", new_config.Num, sm.me, op.Shard, op.Gid)
 		new_config.Shards[op.Shard] = op.Gid
 	case QUERY:
 		if op.Num == -1 {

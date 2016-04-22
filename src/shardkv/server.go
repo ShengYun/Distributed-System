@@ -43,6 +43,8 @@ type ShardKV struct {
 	applied    int   // applied paxos seq
 	db         map[string]string
 	seen       map[int]map[int64]int // processed request, grouped by shard, then by individual client
+	replied    map[int64]string      // lastest reply value to the client Get request
+	received   map[int]map[int]bool  // received shard data for each config change
 	config     shardmaster.Config
 }
 
@@ -76,6 +78,8 @@ func (kv *ShardKV) apply(op Op) (Err, int64, string) {
 		kv.send_shard(op.Config)
 	} else if op.Op == "Reconfig" {
 		kv.load_shard(op)
+	} else if op.Op == "ChangeConfig" {
+		kv.change_config(op.Config)
 	} else if op.Jid > kv.seen[op.Shard][op.Who] {
 		if len(kv.seen[op.Shard]) == 0 {
 			kv.seen[op.Shard] = make(map[int64]int)
@@ -83,18 +87,18 @@ func (kv *ShardKV) apply(op Op) (Err, int64, string) {
 		kv.seen[op.Shard][op.Who] = op.Jid
 		switch op.Op {
 		case "Put":
-			DPrintf("[%d] [ShardKV %d] [Put] [Key: %s] [Value: %s]\n", kv.gid, kv.me, op.Key, op.Value)
+			DPrintf("[%d --> %d] [Put] [Key: %s] [Value: %s]\n", kv.gid, kv.me, op.Key, op.Value)
 			kv.db[op.Key] = op.Value
 		case "Append":
-			DPrintf("[%d] [ShardKV %d] [Append] [Key: %s] [Value: %s]\n", kv.gid, kv.me, op.Key, op.Value)
+			DPrintf("[%d --> %d] [Append] [Key: %s] [Value: %s]\n", kv.gid, kv.me, op.Key, op.Value)
 			kv.db[op.Key] += op.Value
 		case "Get":
 			if _, exist := kv.db[op.Key]; !exist {
-				DPrintf("[%d] [ShardKV %d] [Err] [No Key: %s]\n", kv.gid, kv.me, op.Key)
+				DPrintf("[%d --> %d] [Err] [No Key: %s]\n", kv.gid, kv.me, op.Key)
 				return ErrNoKey, op.UUID, ""
 			} else {
 				value := kv.db[op.Key]
-				DPrintf("[%d] [ShardKV %d] [Get] [Key: %s] [Value: %s]\n", kv.gid, kv.me, op.Key, value)
+				DPrintf("[%d --> %d] [Get] [Key: %s] [Value: %s]\n", kv.gid, kv.me, op.Key, value)
 				return OK, op.UUID, value
 			}
 		}
@@ -106,8 +110,8 @@ func (kv *ShardKV) apply(op Op) (Err, int64, string) {
 
 // Actual function to deal with client requests
 func (kv *ShardKV) do(op Op) (Err, string) {
-	if op.Op != "SendShard" && kv.config.Shards[op.Shard] != kv.gid {
-		DPrintf("[%d] [ShardKV %d] [Err] [Shard Gid %d :: KV Gid %d]\n", kv.gid, kv.me, kv.config.Shards[op.Shard], kv.gid)
+	if op.Op != "SendShard" && kv.config.Shards[op.Shard] != kv.gid && op.Op != "Reconfig" && op.Op != "ChangeConfig" {
+		DPrintf("[%d --> %d] [Err] [%v] [K: %v] [Shard Gid %d :: KV Gid %d]\n", kv.gid, kv.me, op.Op, op.Key, kv.config.Shards[op.Shard], kv.gid)
 		return ErrWrongGroup, ""
 	}
 	for true {
@@ -121,8 +125,8 @@ func (kv *ShardKV) do(op Op) (Err, string) {
 			_, decision = kv.check_status(seq)
 		}
 		ok, UUID, value := kv.apply(decision)
-		if ok == OK && UUID == op.UUID {
-			return OK, value
+		if UUID == op.UUID {
+			return ok, value
 		}
 	}
 	return OK, ""
@@ -147,6 +151,11 @@ func (kv *ShardKV) Get(args *GetArgs, reply *GetReply) error {
 	case ErrWrongGroup:
 		reply.Err = ErrWrongGroup
 	case OK:
+		if v == "" {
+			v = kv.replied[op.Who]
+		} else {
+			kv.replied[op.Who] = v
+		}
 		reply.Err = OK
 		reply.Value = v
 	}
@@ -170,7 +179,7 @@ func (kv *ShardKV) PutAppend(args *PutAppendArgs, reply *PutAppendReply) error {
 	case ErrWrongGroup:
 		reply.Err = ErrWrongGroup
 	case OK:
-		DPrintf("[%d] [ShardKV %d] [Done] [%s] [Key: %s] [Value: %s]\n", kv.gid, kv.me, args.Op, args.Key, args.Value)
+		DPrintf("[%d --> %d] [Done] [%s] [Key: %s] [Value: %s]\n", kv.gid, kv.me, args.Op, args.Key, args.Value)
 		reply.Err = OK
 	}
 	return nil
@@ -186,19 +195,26 @@ func (kv *ShardKV) tick() {
 	kv.mu.Lock()
 	defer kv.mu.Unlock()
 	new_config := kv.sm.Query(-1)
-	DPrintf("[%d] ShardKV %d] [New Config Num: %d :: Old Config Num: %d]\n", kv.gid, kv.me, new_config.Num, kv.config.Num)
+	DPrintf("[%d --> %d] [Tick] [New Config Num: %d :: Old Config Num: %d]\n", kv.gid, kv.me, new_config.Num, kv.config.Num)
+	var op Op
+	op.Op = "SendShard"
+	op.Config = new_config
+	op.UUID = nrand()
+	kv.do(op)
+	op.UUID = nrand()
+	op.Op = "ChangeConfig"
+	kv.do(op)
+}
+
+func (kv *ShardKV) change_config(new_config shardmaster.Config) {
 	if new_config.Num > kv.config.Num {
-		var op Op
-		op.Op = "SendShard"
-		op.Config = new_config
-		op.UUID = nrand()
-		kv.do(op)
+		DPrintf("[%d --> %d] [Change Config] [%d --> %d]\n", kv.gid, kv.me, kv.config.Num, new_config.Num)
+		kv.config = new_config
 	}
 }
 
 func (kv *ShardKV) send_shard(new_config shardmaster.Config) {
 	old_config := kv.config
-	kv.config = new_config
 	for shard, gid := range new_config.Shards {
 		// the shard originally assign to me is assigned to others
 		// send the data to the new owner of the shard
@@ -210,16 +226,20 @@ func (kv *ShardKV) send_shard(new_config shardmaster.Config) {
 			args.Data = data
 			args.Seen = kv.seen[shard]
 			for _, srv := range new_config.Groups[gid] {
-				DPrintf("[%d] ShardKV %d] [Config %d -> Config %d] [Send Shard %d -> Group %d]\n", kv.gid, kv.me, old_config.Num, new_config.Num, shard, gid)
+				DPrintf("[%d --> %d] [Config %d -> Config %d] [Send Shard %d -> Group %d]\n", kv.gid, kv.me, old_config.Num, new_config.Num, shard, gid)
 				var reply SendShardReply
 				ok := call(srv, "ShardKV.Reconfig", args, &reply)
+				DPrintf("Here\n")
 				if ok && reply.Err == ErrOldConfig {
-					DPrintf("[%d] ShardKV %d] [SendShard] [Err] [Receiver Has More Recent Config]\n", kv.gid, kv.me)
+					DPrintf("[%d --> %d] [SendShard] [Err] [Receiver Has More Recent Config]\n", kv.gid, kv.me)
 				}
-				//if ok && reply.Err == ErrWrongGroup {
-				//DPrintf("[ShardKV %d] [SendShard] [Err] [Receiver Not Ready]\n", kv.me)
-				//}
+				if ok {
+					break
+				}
 			}
+			//if ok && reply.Err == ErrWrongGroup {
+			//DPrintf("[ShardKV %d] [SendShard] [Err] [Receiver Not Ready]\n", kv.me)
+			//}
 		}
 	}
 }
@@ -242,24 +262,35 @@ func (kv *ShardKV) Reconfig(args *SendShardArgs, reply *SendShardReply) error {
 	configNum, shard, data, seen := args.ConfigNum, args.Shard, args.Data, args.Seen
 	if configNum < kv.config.Num {
 		reply.Err = ErrOldConfig
+		DPrintf("[%d --> %d] [SendShard] [Err] [Has More Recent Config]\n", kv.gid, kv.me)
 		return nil
 	}
-	var op Op
-	op.Op = "Reconfig"
-	op.Shard = shard
-	op.Data = data
-	op.Seen = seen
-	op.UUID = nrand()
-	kv.do(op)
+	if len(kv.received[configNum]) == 0 {
+		kv.received[configNum] = make(map[int]bool)
+	}
+	if kv.received[configNum][shard] == false {
+		DPrintf("[%d --> %d] [Got Shard %d Data]\n", kv.gid, kv.me, shard)
+		kv.received[configNum][shard] = true
+		var op Op
+		op.Op = "Reconfig"
+		op.Shard = shard
+		op.Data = data
+		op.Seen = seen
+		op.UUID = nrand()
+		kv.do(op)
+		DPrintf("[%d --> %d] [Finished Loading Shard %d]\n", kv.gid, kv.me, shard)
+	}
 	return nil
 }
 
 // actual function for receiver end to process shard data
 func (kv *ShardKV) load_shard(op Op) {
 	shard, data, seen := op.Shard, op.Data, op.Seen
-	DPrintf("[%d] ShardKV %d] [Load Shard %d]\n", kv.gid, kv.me, shard)
+	DPrintf("[%d --> %d] [Load Shard %d]\n", kv.gid, kv.me, shard)
 	kv.seen[shard] = seen
-	for key, value := range data {
+	for key := range data {
+		value := data[key]
+		DPrintf("[%d --> %d] [Loading Shard %d] [K: %v ---> V: %v]\n", kv.gid, kv.me, shard, key, value)
 		kv.db[key] = value
 	}
 }
@@ -310,6 +341,8 @@ func StartServer(gid int64, shardmasters []string,
 	kv.gid = gid
 	kv.db = make(map[string]string)
 	kv.seen = make(map[int]map[int64]int)
+	kv.replied = make(map[int64]string)
+	kv.received = make(map[int]map[int]bool)
 	kv.applied = 0
 	kv.sm = shardmaster.MakeClerk(shardmasters)
 	kv.config = shardmaster.Config{Num: 0}
