@@ -109,6 +109,7 @@ func (ck *Clerk) Get(key string) string {
 				args.Jid = ck.jid
 				args.Who = ck.me
 				var reply GetReply
+				DPrintf("[Client] [Get] [K: %s S: %d <-- %s]\n", key, shard, srv)
 				ok := call(srv, "ShardKV.Get", args, &reply)
 				if ok && (reply.Err == OK || reply.Err == ErrNoKey) {
 					return reply.Value
@@ -151,6 +152,7 @@ func (ck *Clerk) PutAppend(key string, value string, op string) {
 				args.Jid = ck.jid
 				args.Who = ck.me
 				var reply PutAppendReply
+				DPrintf("[Client] [%s] [K: %s V: %s S: %d --> %s]\n", op, key, value, shard, srv)
 				ok := call(srv, "ShardKV.PutAppend", args, &reply)
 				if ok && reply.Err == OK {
 					return

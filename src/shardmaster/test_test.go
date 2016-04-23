@@ -35,6 +35,9 @@ func cleanup(sma []*ShardMaster) {
 func check(t *testing.T, groups []int64, ck *Clerk) {
 	c := ck.Query(-1)
 	if len(c.Groups) != len(groups) {
+		for gid, servers := range c.Groups {
+			DPrintf("[Gid: %d] [Servers: %v]\n", gid, servers)
+		}
 		t.Fatalf("wanted %v groups, got %v", len(groups), len(c.Groups))
 	}
 
