@@ -13,7 +13,7 @@ const (
 	OK            = "OK"
 	ErrNoKey      = "ErrNoKey"
 	ErrWrongGroup = "ErrWrongGroup"
-	ErrOldConfig  = "ErrOldConfig"
+	ErrNotReady   = "ErrNotReady"
 )
 
 type Err string
@@ -47,13 +47,15 @@ type GetReply struct {
 	Value string
 }
 
-type SendShardArgs struct {
+type GetShardArgs struct {
 	ConfigNum int
 	Shard     int
-	Data      map[string]string
-	Seen      map[int64]int
+	Gid       int64 // just for debugging
+	Me        int   // just for debugging
 }
 
-type SendShardReply struct {
-	Err Err
+type GetShardReply struct {
+	Seen map[int64]int
+	Data map[string]string
+	Err  Err
 }
