@@ -100,7 +100,7 @@ func setup(t *testing.T, tag string, unreliable bool) *tCluster {
 	}
 	tc.mck = tc.shardclerk()
 
-	tc.groups = make([]*tGroup, ngroups)
+	tc.groups = make([]*tGroup, ngroups) // replica groups
 
 	for i := 0; i < ngroups; i++ {
 		tc.groups[i] = &tGroup{}

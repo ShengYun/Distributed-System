@@ -12,6 +12,8 @@ type Clerk struct {
 	mu     sync.Mutex // one RPC at a time
 	sm     *shardmaster.Clerk
 	config shardmaster.Config
+	jid    int // monotonically increasing job id for duplicate detection
+	me     int64
 	// You'll have to modify Clerk.
 }
 
@@ -25,6 +27,8 @@ func nrand() int64 {
 func MakeClerk(shardmasters []string) *Clerk {
 	ck := new(Clerk)
 	ck.sm = shardmaster.MakeClerk(shardmasters)
+	ck.jid = 0
+	ck.me = nrand()
 	// You'll have to modify MakeClerk.
 	return ck
 }
@@ -85,6 +89,7 @@ func key2shard(key string) int {
 func (ck *Clerk) Get(key string) string {
 	ck.mu.Lock()
 	defer ck.mu.Unlock()
+	ck.jid++
 
 	// You'll have to modify Get().
 
@@ -100,7 +105,11 @@ func (ck *Clerk) Get(key string) string {
 			for _, srv := range servers {
 				args := &GetArgs{}
 				args.Key = key
+				args.Shard = shard
+				args.Jid = ck.jid
+				args.Who = ck.me
 				var reply GetReply
+				DPrintf("[Client] [Get] [K: %s S: %d <-- %s]\n", key, shard, srv)
 				ok := call(srv, "ShardKV.Get", args, &reply)
 				if ok && (reply.Err == OK || reply.Err == ErrNoKey) {
 					return reply.Value
@@ -122,7 +131,7 @@ func (ck *Clerk) Get(key string) string {
 func (ck *Clerk) PutAppend(key string, value string, op string) {
 	ck.mu.Lock()
 	defer ck.mu.Unlock()
-
+	ck.jid++
 	// You'll have to modify PutAppend().
 
 	for {
@@ -139,7 +148,11 @@ func (ck *Clerk) PutAppend(key string, value string, op string) {
 				args.Key = key
 				args.Value = value
 				args.Op = op
+				args.Shard = shard
+				args.Jid = ck.jid
+				args.Who = ck.me
 				var reply PutAppendReply
+				DPrintf("[Client] [%s] [K: %s V: %s S: %d --> %s]\n", op, key, value, shard, srv)
 				ok := call(srv, "ShardKV.PutAppend", args, &reply)
 				if ok && reply.Err == OK {
 					return
